@@ -5,7 +5,6 @@ import { PrimaryNav } from "@/components/PrimaryNav";
 import { EstateNav } from "@/components/EstateNav";
 import { HeaderWho } from "@/components/HeaderWho";
 import { HandoversProvider } from "@/components/HandoversProvider";
-import { MaintenancePanel } from "@/components/MaintenancePanel";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getHandoversUser();
@@ -42,14 +41,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </header>
           <div className="ho-wrap">
             <main>{children}</main>
-            <aside className="ho-rail" aria-label="Maintenance">
-              <div className="ho-sticky">
-                <h2 className="ho-rail-title">Maintenance</h2>
-                <div style={{ marginTop: 16 }}>
-                  <MaintenancePanel />
-                </div>
-              </div>
-            </aside>
           </div>
         </HandoversProvider>
       </div>

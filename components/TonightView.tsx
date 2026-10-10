@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useHandovers } from "@/components/HandoversProvider";
+import { MaintenancePanel } from "@/components/MaintenancePanel";
 import { cap, eur, lines } from "@/lib/format";
 import { serviceDateNow, timeHM } from "@/lib/paris";
 import {
@@ -169,7 +170,7 @@ export function TonightView() {
 
   async function submitRoom(k: RoomKey) {
     const s = view(k);
-    if (!s.by) { toast(`Pick who ran ${k} before submitting.`); document.getElementById(`by-${k}`)?.focus(); return; }
+    if (!s.by) { toast(`Pick who is reporting for ${k} before submitting.`); document.getElementById(`by-${k}`)?.focus(); return; }
     const part: RoomPart = { by: s.by, covers: s.num, notes: s.notes.trim(), closed: false, submittedAt: new Date().toISOString() };
     try {
       await patchRoom(k, part);
@@ -307,31 +308,33 @@ export function TonightView() {
                       <input type="checkbox" checked={s.closed} onChange={(e) => toggleClosed(k, e.target.checked)} /> Closed
                     </label>
                   </div>
-                  <div className="ho-by">
-                    <label className="ho-caption" htmlFor={`by-${k}`}>By</label>
-                    <select id={`by-${k}`} value={s.by} onChange={(e) => setEdit(k, { by: e.target.value })}>
-                      <option value="">Who ran {name}</option>
-                      {(s.by && !people.includes(s.by) ? [s.by, ...people] : people).map((p) => <option key={p}>{p}</option>)}
-                    </select>
+                  <div className="ho-r2">
+                    <div className="ho-by">
+                      <label className="ho-caption" htmlFor={`by-${k}`}>Reported by</label>
+                      <select id={`by-${k}`} value={s.by} onChange={(e) => setEdit(k, { by: e.target.value })}>
+                        <option value="">Reporting for {name}</option>
+                        {(s.by && !people.includes(s.by) ? [s.by, ...people] : people).map((p) => <option key={p}>{p}</option>)}
+                      </select>
+                    </div>
+                    <div className="ho-cv">
+                      <input
+                        type="number" min={0} inputMode="numeric" placeholder="0" className="ho-num"
+                        aria-label={`${name} covers`} value={s.covers}
+                        onChange={(e) => setEdit(k, { covers: e.target.value })}
+                      />
+                      <span className="ho-caption">covers</span>
+                    </div>
+                    <span className="ho-sqhint">
+                      {s.bk
+                        ? `SevenRooms: ${s.bk.covers} covers booked on ${s.bk.reservations} reservation${s.bk.reservations === 1 ? "" : "s"}, as of ${booked?.asOf || "the afternoon summary"}. Correct it to what actually came in.`
+                        : booked && !s.closed ? "SevenRooms: nothing booked in this room, walk-ins only." : ""}
+                    </span>
+                    <span className="ho-sqhint">
+                      {sqr && sqr.orders ? `Square: ${sqr.tables} table${sqr.tables === 1 ? "" : "s"}, ${sqr.orders} check${sqr.orders === 1 ? "" : "s"}, ${eur(sqr.gross)}` : ""}
+                    </span>
                   </div>
-                  <div className="ho-cv">
-                    <input
-                      type="number" min={0} inputMode="numeric" placeholder="0" className="ho-num"
-                      aria-label={`${name} covers`} value={s.covers}
-                      onChange={(e) => setEdit(k, { covers: e.target.value })}
-                    />
-                    <span className="ho-caption">covers</span>
-                  </div>
-                  <span className="ho-sqhint">
-                    {s.bk
-                      ? `SevenRooms: ${s.bk.covers} covers booked on ${s.bk.reservations} reservation${s.bk.reservations === 1 ? "" : "s"}, as of ${booked?.asOf || "the afternoon summary"}. Correct it to what actually came in.`
-                      : booked && !s.closed ? "SevenRooms: nothing booked in this room, walk-ins only." : ""}
-                  </span>
-                  <span className="ho-sqhint">
-                    {sqr && sqr.orders ? `Square: ${sqr.tables} table${sqr.tables === 1 ? "" : "s"}, ${sqr.orders} check${sqr.orders === 1 ? "" : "s"}, ${eur(sqr.gross)}` : ""}
-                  </span>
                   <textarea
-                    placeholder={`How ${name} ran`} aria-label={`${name} notes`} value={s.notes}
+                    placeholder={`Notes for ${name}`} aria-label={`${name} notes`} value={s.notes}
                     onChange={(e) => setEdit(k, { notes: e.target.value })}
                   />
                   <div className="ho-sub">
@@ -452,6 +455,13 @@ export function TonightView() {
             <span className="ho-toast" aria-live="polite">{toastText}</span>
           </div>
         </form>
+
+        <section aria-labelledby="ho-maint-h">
+          <h2 id="ho-maint-h">Maintenance</h2>
+          <div style={{ marginTop: 12 }}>
+            <MaintenancePanel />
+          </div>
+        </section>
       </div>
     </section>
   );

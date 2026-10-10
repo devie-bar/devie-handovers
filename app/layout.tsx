@@ -1,0 +1,29 @@
+import type { Metadata, Viewport } from "next";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "De Vie Handovers",
+  description: "Nightly handovers and the maintenance list.",
+  manifest: "/manifest.webmanifest",
+  applicationName: "De Vie",
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "De Vie Handovers" },
+  icons: {
+    icon: [{ url: "/icon-512.png", type: "image/png" }],
+    apple: [{ url: "/apple-icon.png" }],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#025B4C",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body className="min-h-screen font-sans antialiased">{children}</body>
+    </html>
+  );
+}

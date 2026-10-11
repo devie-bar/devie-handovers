@@ -49,7 +49,7 @@ export async function GET(request: Request) {
   const date = new URL(request.url).searchParams.get("date");
   if (!isIsoDate(date)) return fail(400, "Pass ?date=YYYY-MM-DD.");
 
-  const token = process.env.SQUARE_ACCESS_TOKEN;
+  const token = process.env.SQUARE_ACCESS_TOKEN?.trim();
   if (!token) return fail(500, "SQUARE_ACCESS_TOKEN is not set on the server.");
   const location = process.env.SQUARE_LOCATION_ID || "LG2QVCZ9QVCNC";
 

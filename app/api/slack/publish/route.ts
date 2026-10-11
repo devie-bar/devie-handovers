@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   if (!isIsoDate(date)) return fail(400, "date must be YYYY-MM-DD.");
   if (target !== "channel" && target !== "test") return fail(400, 'target must be "channel" or "test".');
 
-  const token = process.env.SLACK_BOT_TOKEN;
+  const token = process.env.SLACK_BOT_TOKEN?.trim();
   if (!token) return fail(500, "SLACK_BOT_TOKEN is not set on the server.");
   const channel = target === "channel"
     ? process.env.HANDOVERS_SLACK_CHANNEL || "C07FN2USAJC"

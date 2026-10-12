@@ -75,6 +75,7 @@ export function TonightView() {
   const [target, setTarget] = useState<"channel" | "test">("channel");
   const [flagTitle, setFlagTitle] = useState("");
   const [flagLoc, setFlagLoc] = useState("Bar");
+  const [openOverride, setOpenOverride] = useState<Partial<Record<RoomKey, boolean>>>({});
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const toast = useCallback((m: string) => {
@@ -88,6 +89,7 @@ export function TonightView() {
     let cancelled = false;
     setDraft(blankDraft(date));
     setEdits({});
+    setOpenOverride({});
     setDirtyShared(false);
     setLoadErr(null);
 
@@ -154,6 +156,9 @@ export function TonightView() {
   const setEdit = (k: RoomKey, p: Edit) => setEdits((cur) => ({ ...cur, [k]: { ...cur[k], ...p } }));
 
   // Writes to the shared draft are partial: read the rooms, merge one room, write back.
+  // A room opens or collapses by its state (unsent and open: open; otherwise collapsed) until someone toggles it by hand.
+  const clearOpen = (k: RoomKey) => setOpenOverride((cur) => { const n = { ...cur }; delete n[k]; return n; });
+
   async function patchRoom(k: RoomKey, part: RoomPart) {
     const { data, error } = await supabase.from("handover_drafts").select("rooms").eq("service_date", date).single();
     if (error) throw new Error(error.message);
@@ -164,7 +169,7 @@ export function TonightView() {
   }
 
   async function toggleClosed(k: RoomKey, closed: boolean) {
-    try { await patchRoom(k, { closed, closedByHand: true }); }
+    try { await patchRoom(k, { closed, closedByHand: true }); clearOpen(k); }
     catch (err) { toast("Could not save: " + (err as Error).message); }
   }
 
@@ -174,6 +179,7 @@ export function TonightView() {
     const part: RoomPart = { by: s.by, covers: s.num, notes: s.notes.trim(), closed: false, submittedAt: new Date().toISOString() };
     try {
       await patchRoom(k, part);
+      clearOpen(k);
       setEdits((cur) => { const n = { ...cur }; delete n[k]; return n; });
       toast(cap(k) + " submitted.");
     } catch (err) { toast("Could not submit: " + (err as Error).message); }
@@ -286,6 +292,48 @@ export function TonightView() {
           </div>
         </div>
 
+        <div className="ho-sq">
+          <div className="ho-mtop"><span className="ho-label">Square</span><span className="ho-caption" aria-live="polite">{sqSub}</span></div>
+          <div className="ho-sq-out">
+            {sq && (
+              <>
+                <div className="ho-sqk">
+                  <div><span className="ho-display ho-num">{eur(sq.totals.net)}</span><span className="ho-label">Net sales</span></div>
+                  <div><span className="ho-display ho-num">{eur(sq.totals.gross)}</span><span className="ho-label">Gross sales</span></div>
+                  <div><span className="ho-display ho-num">{eur(sq.totals.tips)}</span><span className="ho-label">Tips</span></div>
+                  <div><span className="ho-display ho-num">{sq.totals.orders}</span><span className="ho-label">Orders</span></div>
+                  <div><span className="ho-display ho-num">{eur(sq.totals.avg)}</span><span className="ho-label">Average order</span></div>
+                  <div><span className="ho-display ho-num">{sq.totals.items}</span><span className="ho-label">Items sold</span></div>
+                </div>
+                <p className="ho-caption" style={{ margin: 0 }}>
+                  Discounts {eur(sq.totals.discount)} · Tax {eur(sq.totals.tax)} · Card {eur(sq.totals.card)} · Cash {eur(sq.totals.cash)}
+                  {sq.totals.otherTender ? " · Other " + eur(sq.totals.otherTender) : ""}
+                </p>
+                <table className="ho-sqt">
+                  <thead><tr><th>Room</th><th className="ho-n">Tables</th><th className="ho-n">Checks</th><th className="ho-n">Gross</th><th className="ho-n">Tips</th></tr></thead>
+                  <tbody>
+                    {(["summer", "spring", "autumn", "other"] as const).filter((k) => sq.rooms[k]?.orders).map((k) => (
+                      <tr key={k}>
+                        <td>{cap(k)}</td><td className="ho-n">{sq.rooms[k].tables}</td><td className="ho-n">{sq.rooms[k].orders}</td>
+                        <td className="ho-n">{eur(sq.rooms[k].gross)}</td><td className="ho-n">{eur(sq.rooms[k].tips)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <table className="ho-sqt">
+                  <thead><tr><th>Category</th><th className="ho-n">Items</th><th className="ho-n">Gross</th></tr></thead>
+                  <tbody>{sq.categories.map((c) => <tr key={c.name}><td>{c.name}</td><td className="ho-n">{c.qty}</td><td className="ho-n">{eur(c.gross)}</td></tr>)}</tbody>
+                </table>
+                <p className="ho-caption" style={{ margin: 0 }}>Top sellers: {sq.top.map((t) => `${t.name} ×${t.qty}`).join(" · ")}</p>
+              </>
+            )}
+          </div>
+          <div className="ho-r">
+            <button type="button" className="ho-btn ho-sm" disabled={sqBusy} onClick={pullSquare}>Pull tonight&apos;s sales from Square</button>
+            <span className="ho-caption">Sales, tips, tables and categories for the service window, 15:00 to 06:00. Covers stay yours to type: Square does not record them per table.</span>
+          </div>
+        </div>
+
         <div>
           <div className="ho-mtop">
             <span className="ho-label">Rooms</span>
@@ -300,50 +348,68 @@ export function TonightView() {
               const s = view(k);
               const r = s.r;
               const sqr = sq?.rooms?.[k];
+              const isOpen = openOverride[k] ?? (!s.closed && !s.sent);
+              const summary = s.closed
+                ? "Closed"
+                : s.sent
+                  ? `${r.covers || 0} cover${r.covers === 1 ? "" : "s"}, reported by ${r.by || "someone"}, submitted ${timeHM(r.submittedAt as string)}`
+                  : "Not submitted yet" + (s.bk ? `, ${s.bk.covers} booked in SevenRooms` : "");
               return (
-                <div key={k} className={`ho-room ${s.closed ? "ho-off" : ""} ${s.sent ? "ho-sent" : ""}`}>
-                  <div className="ho-rh">
-                    <h3>{name}</h3>
-                    <label>
+                <div key={k} className={`ho-room ${s.closed ? "ho-off" : ""} ${s.sent ? "ho-sent" : ""} ${isOpen ? "ho-open" : ""}`}>
+                  <div className="ho-rh" onClick={() => setOpenOverride((cur) => ({ ...cur, [k]: !isOpen }))}>
+                    <h3>
+                      <button type="button" className="ho-rtoggle" aria-expanded={isOpen} aria-controls={`room-${k}`} id={`rh-${k}`}>
+                        <span className="ho-rname">{name}</span>
+                        <span className="ho-body-s ho-rsum">{summary}</span>
+                      </button>
+                    </h3>
+                    <label onClick={(e) => e.stopPropagation()}>
                       <input type="checkbox" checked={s.closed} onChange={(e) => toggleClosed(k, e.target.checked)} /> Closed
                     </label>
+                    <svg className="ho-chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                      <path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </div>
-                  <div className="ho-r2">
-                    <div className="ho-by">
-                      <label className="ho-caption" htmlFor={`by-${k}`}>Reported by</label>
-                      <select id={`by-${k}`} value={s.by} onChange={(e) => setEdit(k, { by: e.target.value })}>
-                        <option value="">Reporting for {name}</option>
-                        {(s.by && !people.includes(s.by) ? [s.by, ...people] : people).map((p) => <option key={p}>{p}</option>)}
-                      </select>
-                    </div>
-                    <div className="ho-cv">
-                      <input
-                        type="number" min={0} inputMode="numeric" placeholder="0" className="ho-num"
-                        aria-label={`${name} covers`} value={s.covers}
-                        onChange={(e) => setEdit(k, { covers: e.target.value })}
+                  <div className="ho-rbody" id={`room-${k}`} role="region" aria-labelledby={`rh-${k}`}>
+                    <div className="ho-rin">
+                      <div className="ho-r2">
+                        <div className="ho-by">
+                          <label className="ho-caption" htmlFor={`by-${k}`}>Reported by</label>
+                          <select id={`by-${k}`} value={s.by} onChange={(e) => setEdit(k, { by: e.target.value })}>
+                            <option value="">Reporting for {name}</option>
+                            {(s.by && !people.includes(s.by) ? [s.by, ...people] : people).map((p) => <option key={p}>{p}</option>)}
+                          </select>
+                        </div>
+                        <div className="ho-cv">
+                          <input
+                            type="number" min={0} inputMode="numeric" placeholder="0" className="ho-num"
+                            aria-label={`${name} covers`} value={s.covers}
+                            onChange={(e) => setEdit(k, { covers: e.target.value })}
+                          />
+                          <span className="ho-caption">covers</span>
+                        </div>
+                        <span className="ho-sqhint">
+                          {s.bk
+                            ? `SevenRooms: ${s.bk.covers} covers booked on ${s.bk.reservations} reservation${s.bk.reservations === 1 ? "" : "s"}, as of ${booked?.asOf || "the afternoon summary"}. Correct it to what actually came in.`
+                            : booked && !s.closed ? "SevenRooms: nothing booked in this room, walk-ins only." : ""}
+                        </span>
+                        <span className="ho-sqhint">
+                          {sqr && sqr.orders ? `Square: ${sqr.tables} table${sqr.tables === 1 ? "" : "s"}, ${sqr.orders} check${sqr.orders === 1 ? "" : "s"}, ${eur(sqr.gross)}` : ""}
+                        </span>
+                      </div>
+                      <textarea
+                        placeholder={`Notes for ${name}`} aria-label={`${name} notes`} value={s.notes}
+                        onChange={(e) => setEdit(k, { notes: e.target.value })}
                       />
-                      <span className="ho-caption">covers</span>
+                      <div className="ho-sub">
+                        <button type="button" className="ho-btn ho-sm ho-primary" onClick={() => submitRoom(k)}>
+                          {(r.submittedAt ? "Resubmit " : "Submit ") + name}
+                        </button>
+                        <span className="ho-stamp">
+                          {r.submittedAt ? `Submitted by ${r.by || "someone"} at ${timeHM(r.submittedAt)}` : ""}
+                        </span>
+                      </div>
                     </div>
-                    <span className="ho-sqhint">
-                      {s.bk
-                        ? `SevenRooms: ${s.bk.covers} covers booked on ${s.bk.reservations} reservation${s.bk.reservations === 1 ? "" : "s"}, as of ${booked?.asOf || "the afternoon summary"}. Correct it to what actually came in.`
-                        : booked && !s.closed ? "SevenRooms: nothing booked in this room, walk-ins only." : ""}
-                    </span>
-                    <span className="ho-sqhint">
-                      {sqr && sqr.orders ? `Square: ${sqr.tables} table${sqr.tables === 1 ? "" : "s"}, ${sqr.orders} check${sqr.orders === 1 ? "" : "s"}, ${eur(sqr.gross)}` : ""}
-                    </span>
-                  </div>
-                  <textarea
-                    placeholder={`Notes for ${name}`} aria-label={`${name} notes`} value={s.notes}
-                    onChange={(e) => setEdit(k, { notes: e.target.value })}
-                  />
-                  <div className="ho-sub">
-                    <button type="button" className="ho-btn ho-sm ho-primary" onClick={() => submitRoom(k)}>
-                      {(r.submittedAt ? "Resubmit " : "Submit ") + name}
-                    </button>
-                    <span className="ho-stamp">
-                      {r.submittedAt ? `Submitted by ${r.by || "someone"} at ${timeHM(r.submittedAt)}` : ""}
-                    </span>
                   </div>
                 </div>
               );
@@ -361,48 +427,6 @@ export function TonightView() {
                   ? `Waiting on ${openRooms.length - submittedCount} room${openRooms.length - submittedCount > 1 ? "s" : ""}. You can still publish without them.`
                   : "All rooms in. Add the shared notes and publish."}
             </span>
-          </div>
-
-          <div className="ho-sq">
-            <div className="ho-mtop"><span className="ho-label">Square</span><span className="ho-caption" aria-live="polite">{sqSub}</span></div>
-            <div className="ho-sq-out">
-              {sq && (
-                <>
-                  <div className="ho-sqk">
-                    <div><span className="ho-display ho-num">{eur(sq.totals.net)}</span><span className="ho-label">Net sales</span></div>
-                    <div><span className="ho-display ho-num">{eur(sq.totals.gross)}</span><span className="ho-label">Gross sales</span></div>
-                    <div><span className="ho-display ho-num">{eur(sq.totals.tips)}</span><span className="ho-label">Tips</span></div>
-                    <div><span className="ho-display ho-num">{sq.totals.orders}</span><span className="ho-label">Orders</span></div>
-                    <div><span className="ho-display ho-num">{eur(sq.totals.avg)}</span><span className="ho-label">Average order</span></div>
-                    <div><span className="ho-display ho-num">{sq.totals.items}</span><span className="ho-label">Items sold</span></div>
-                  </div>
-                  <p className="ho-caption" style={{ margin: 0 }}>
-                    Discounts {eur(sq.totals.discount)} · Tax {eur(sq.totals.tax)} · Card {eur(sq.totals.card)} · Cash {eur(sq.totals.cash)}
-                    {sq.totals.otherTender ? " · Other " + eur(sq.totals.otherTender) : ""}
-                  </p>
-                  <table className="ho-sqt">
-                    <thead><tr><th>Room</th><th className="ho-n">Tables</th><th className="ho-n">Checks</th><th className="ho-n">Gross</th><th className="ho-n">Tips</th></tr></thead>
-                    <tbody>
-                      {(["summer", "spring", "autumn", "other"] as const).filter((k) => sq.rooms[k]?.orders).map((k) => (
-                        <tr key={k}>
-                          <td>{cap(k)}</td><td className="ho-n">{sq.rooms[k].tables}</td><td className="ho-n">{sq.rooms[k].orders}</td>
-                          <td className="ho-n">{eur(sq.rooms[k].gross)}</td><td className="ho-n">{eur(sq.rooms[k].tips)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <table className="ho-sqt">
-                    <thead><tr><th>Category</th><th className="ho-n">Items</th><th className="ho-n">Gross</th></tr></thead>
-                    <tbody>{sq.categories.map((c) => <tr key={c.name}><td>{c.name}</td><td className="ho-n">{c.qty}</td><td className="ho-n">{eur(c.gross)}</td></tr>)}</tbody>
-                  </table>
-                  <p className="ho-caption" style={{ margin: 0 }}>Top sellers: {sq.top.map((t) => `${t.name} ×${t.qty}`).join(" · ")}</p>
-                </>
-              )}
-            </div>
-            <div className="ho-r">
-              <button type="button" className="ho-btn ho-sm" disabled={sqBusy} onClick={pullSquare}>Pull tonight&apos;s sales from Square</button>
-              <span className="ho-caption">Sales, tips, tables and categories for the service window, 15:00 to 06:00. Covers stay yours to type: Square does not record them per table.</span>
-            </div>
           </div>
 
           <div className="ho-f"><label htmlFor="f-vips">VIPs</label>

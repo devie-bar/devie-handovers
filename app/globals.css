@@ -114,9 +114,18 @@ body {
   :where(.ho-app) .ho-grid2{grid-template-columns:1fr 1fr}
 }
 :where(.ho-app) .ho-rooms{display:grid;gap:24px}
-:where(.ho-app) .ho-room{display:grid;gap:8px;padding-top:12px;border-top:1px solid var(--dv-line)}
+:where(.ho-app) .ho-room{display:grid;gap:0;padding-top:12px;border-top:1px solid var(--dv-line)}
 :where(.ho-app) .ho-room .ho-rh{display:flex;align-items:center;justify-content:space-between;gap:8px}
-:where(.ho-app) .ho-room .ho-rh h3{font-weight:400}
+:where(.ho-app) .ho-room .ho-rh{cursor:pointer;min-height:var(--ctl)}
+:where(.ho-app) .ho-room .ho-rh h3{font-weight:400;flex:1;min-width:0}
+:where(.ho-app) .ho-room .ho-rtoggle{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;width:100%;min-height:var(--ctl);padding:4px 0;background:none;border:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
+:where(.ho-app) .ho-room .ho-rname{font:inherit;font-weight:400}
+:where(.ho-app) .ho-room .ho-rsum{color:var(--dv-ink-soft)}
+:where(.ho-app) .ho-room .ho-chev{flex:none;color:var(--dv-ink-soft);transition:transform .15s ease-out}
+:where(.ho-app) .ho-room.ho-open .ho-chev{transform:rotate(180deg)}
+:where(.ho-app) .ho-room .ho-rbody{display:grid;grid-template-rows:0fr;visibility:hidden;transition:grid-template-rows .15s ease-out,visibility 0s linear .15s}
+:where(.ho-app) .ho-room.ho-open .ho-rbody{grid-template-rows:1fr;visibility:visible;transition:grid-template-rows .15s ease-out,visibility 0s}
+:where(.ho-app) .ho-room .ho-rin{overflow:hidden;min-height:0;display:grid;gap:8px;padding:3px}
 :where(.ho-app) .ho-room .ho-rh label{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--dv-ink-soft);min-height:var(--ctl)}
 :where(.ho-app) .ho-room .ho-rh input[type=checkbox]{width:20px;height:20px;accent-color:var(--dv-green)}
 :where(.ho-app) .ho-room .ho-r2{display:grid;gap:8px}
@@ -130,8 +139,8 @@ body {
 :where(.ho-app) .ho-room.ho-sent .ho-sub .ho-btn.ho-primary{background:var(--dv-surface);border-color:var(--dv-line)}
 :where(.ho-app) .ho-room .ho-stamp{font-size:12px;color:var(--dv-good);font-weight:600}
 @media (min-width:840px){
-  :where(.ho-app) .ho-room{gap:12px}
-  :where(.ho-app) .ho-room .ho-rh{justify-content:flex-start;gap:24px}
+
+  :where(.ho-app) .ho-room .ho-rin{gap:12px}
   :where(.ho-app) .ho-room .ho-r2{display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px}
   :where(.ho-app) .ho-room .ho-by select{flex:none;min-width:200px}
   :where(.ho-app) .ho-room .ho-sqhint{flex:1 1 240px;min-width:0}
@@ -243,5 +252,6 @@ body {
 @keyframes inr{from{transform:translateX(24px);opacity:0}}
 @keyframes inl{from{transform:translateX(-24px);opacity:0}}
 @media (prefers-reduced-motion:reduce){
+  :where(.ho-app) .ho-room .ho-chev,:where(.ho-app) .ho-room .ho-rbody{transition:none}
   :where(.ho-app) .ho-skel i::after,:where(.ho-app) .ho-swap-in-r,:where(.ho-app) .ho-swap-in-l{animation:none}
 }

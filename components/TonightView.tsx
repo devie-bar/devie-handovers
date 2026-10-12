@@ -67,7 +67,7 @@ function dateTitle(d: string): string {
 type Edit = { by?: string; covers?: string; notes?: string };
 
 export function TonightView() {
-  const { supabase, me, people, author, items, addItem } = useHandovers();
+  const { supabase, me, people, author, setAuthor, items, addItem } = useHandovers();
   const [date, setDate] = useState(serviceDateNow());
   const [draft, setDraft] = useState<DraftRow>(() => blankDraft(serviceDateNow()));
   const [edits, setEdits] = useState<Partial<Record<RoomKey, Edit>>>({});
@@ -284,6 +284,12 @@ export function TonightView() {
         <div className="ho-head">
           <h1>{dateTitle(date)}</h1>
           <div className="ho-headr">
+            <div className="ho-author">
+              <label className="ho-caption" htmlFor="author">Handover author</label>
+              <select id="author" value={author} onChange={(e) => setAuthor(e.target.value)}>
+                {(author && !people.includes(author) ? [author, ...people] : people).map((p) => <option key={p}>{p}</option>)}
+              </select>
+            </div>
             <span className="ho-caption">
               {published && draft.published_at ? `Published by ${draft.published_by} at ${timeHM(draft.published_at)}` : "Draft"}
             </span>
@@ -428,7 +434,7 @@ export function TonightView() {
 
         <form className="ho-stack" onSubmit={publish} autoComplete="off">
           <div className="ho-mtop">
-            <h2>Closing manager</h2>
+            <h2>Handover</h2>
             <span className="ho-caption">
               {published
                 ? "Already published. Publishing again reposts to Slack."

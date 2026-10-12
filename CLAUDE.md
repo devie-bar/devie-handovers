@@ -17,8 +17,8 @@ handovers.devie.bar. The nightly handover and the maintenance list, replacing th
 single-file prototype. Next.js 14 App Router, Tailwind, Supabase (the shared De Vie
 Database project, same login and middleware as the dashboard).
 
-- `/` Tonight: one full-width block per room (Summer, Spring, Autumn), the closing
-  manager section with the Square block, a maintenance quick-add, and Publish,
+- `/` Tonight: one full-width block per room (Summer, Spring, Autumn), the Handover
+  section (shared notes, a maintenance quick-add, Publish),
   then the Maintenance section.
 - `/log` Every published night, newest first.
 - `/maintenance` The maintenance list on its own page, also reachable from the
@@ -44,7 +44,7 @@ Database project, same login and middleware as the dashboard).
   (`lib/auth.ts`, and `has_handovers_access()` in the RLS policies). The dashboard's
   `hasDashboard` role gate is deliberately not used here.
 - The signed-in user's name (profiles.full_name, else the email local part) is the
-  default "Reported by" and closing manager. A first name on the people list is matched to it.
+  default "Reported by" and handover author (the person who publishes; never "closing manager"). A first name on the people list is matched to it.
 - Styles: the prototype's CSS lives in `app/globals.css` under a `.ho-` prefix
   inside `:where(.ho-app)`, so it adds no specificity and Tailwind utilities
   (EstateNav, SignOutButton) still win. Tailwind token names are the dashboard's.

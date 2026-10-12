@@ -53,7 +53,7 @@ export function LogView() {
               <article className="ho-ho" key={h.service_date}>
                 <div className="ho-hd">
                   <h2>{fmtDate(h.service_date)}</h2>
-                  <span className="ho-caption">{longDate(h.service_date)}, posted by {h.author}</span>
+                  <span className="ho-caption">{longDate(h.service_date)}, handover by {h.author}</span>
                   <span className="ho-cov ho-num"><b>{h.total_covers ?? 0}</b> covers</span>
                 </div>
                 <div className="ho-rms">

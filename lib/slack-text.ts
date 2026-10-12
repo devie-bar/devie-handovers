@@ -27,7 +27,7 @@ export function slackText(h: HandoverRow, openItems: MaintenanceItem[], link: st
     const bk = h.booked?.rooms?.[k];
     return `**${n}** · ${x.covers || 0} covers${bk ? ` (${bk.covers} booked)` : ""}${x.by ? ` · reported by ${x.by}` : ""}${x.notes ? "\n" + x.notes : ""}`;
   };
-  let m = `**Handover ${fmtDate(h.service_date)}** · ${weekday(h.service_date)} · closed by ${h.author} · **${h.total_covers ?? 0} covers**\n\n${ROOMS.map(room).join("\n\n")}\n\n**VIPs** ${h.vips || "none"}\n\n**85s** ${low.length ? low.join(" · ") : "none"}\n**86s** ${out.length ? out.join(" · ") : "none"}`;
+  let m = `**Handover ${fmtDate(h.service_date)}** · ${weekday(h.service_date)} · handover by ${h.author} · **${h.total_covers ?? 0} covers**\n\n${ROOMS.map(room).join("\n\n")}\n\n**VIPs** ${h.vips || "none"}\n\n**85s** ${low.length ? low.join(" · ") : "none"}\n**86s** ${out.length ? out.join(" · ") : "none"}`;
   if (h.notes) m += `\n\n**Notes**\n${h.notes}`;
   if (h.todo) m += `\n\n**To do**\n${li(h.todo).map((x) => "- " + x).join("\n")}`;
   m += h.haiku ? `\n\n${li(h.haiku).map((x) => "> _" + x + "_").join("\n")}` : "\n\n_No haiku tonight._";

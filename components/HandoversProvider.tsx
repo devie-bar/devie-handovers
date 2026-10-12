@@ -52,7 +52,7 @@ export function HandoversProvider({ displayName, children }: { displayName: stri
   const [filter, setFilter] = useState<"active" | "done">("active");
   const loadedRef = useRef(false);
 
-  // A closing manager picked by hand on this device wins over the signed-in name.
+  // A handover author picked by hand on this device wins over the signed-in name.
   useEffect(() => {
     try {
       const a = localStorage.getItem(AUTHOR_KEY);

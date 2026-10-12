@@ -3,7 +3,7 @@
 import { MaintenancePanel } from "@/components/MaintenancePanel";
 
 // Maintenance as its own page. Tonight also carries the same panel below the
-// closing manager form.
+// handover form.
 export default function MaintenancePage() {
   return (
     <section>

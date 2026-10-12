@@ -4,7 +4,7 @@ export interface HandoversUser {
   id: string;
   email: string | null;
   fullName: string | null;
-  /** Name used as the default "By" and closing manager: profiles.full_name, else the email local part. */
+  /** Name used as the default "By" and handover author: profiles.full_name, else the email local part. */
   displayName: string;
   /** Anyone with a row in public.profiles may use Handovers. */
   hasAccess: boolean;

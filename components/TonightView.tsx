@@ -511,9 +511,10 @@ export function TonightView() {
           </div>
         </div>
 
-        <form id="handover-form" className="ho-module ho-mstack" onSubmit={publish} autoComplete="off">
-          <div className="ho-secthead">
-            <h2 className="ho-sectlabel">Handover</h2>
+        <form id="handover-form" className="ho-stack" onSubmit={publish} autoComplete="off">
+          <section className="ho-module ho-mstack" aria-labelledby="ho-vips-h">
+            <div className="ho-secthead">
+              <h2 className="ho-sectlabel" id="ho-vips-h">VIPs</h2>
             <span className="ho-caption">
               {published
                 ? "Already published. Publishing again reposts to Slack."
@@ -521,12 +522,14 @@ export function TonightView() {
                   ? `Waiting on ${openRooms.length - submittedCount} room${openRooms.length - submittedCount > 1 ? "s" : ""}. You can still publish without them.`
                   : "All rooms in. Add the shared notes and publish."}
             </span>
-          </div>
-
-          <div className="ho-f"><label htmlFor="f-vips">VIPs</label>
+            </div>
+          <div className="ho-f"><label className="ho-sr" htmlFor="f-vips">VIPs</label>
             <textarea id="f-vips" value={shared.vips} onChange={(e) => setField("vips", e.target.value)} placeholder="Who came in, who they were with, anything to remember next time" /></div>
+          </section>
+
+          <section className="ho-module ho-mstack" aria-labelledby="ho-stock-h">
+            <div className="ho-secthead"><h2 className="ho-sectlabel" id="ho-stock-h">85 / 86</h2></div>
           <div className="ho-f">
-            <span className="ho-label">Menu status</span>
             <MenuStatusList
               menu={menu} failed={menuFailed} onRetry={retryMenu} low={shared.low} out={shared.out}
               onChange={(l, o) => { setDirtyShared(true); setShared((s) => ({ ...s, low: l, out: o })); }}
@@ -538,6 +541,10 @@ export function TonightView() {
             <div className="ho-f"><label htmlFor="f-86"><span className="ho-chip ho-c86">86</span>Out, off the menu</label>
               <textarea id="f-86" value={outP.extras} onChange={(e) => setField("out", composeStatus(outP.chosen, e.target.value))} placeholder="One per line" /></div>
           </div>
+          </section>
+
+          <section className="ho-module ho-mstack" aria-labelledby="ho-notes-h">
+            <div className="ho-secthead"><h2 className="ho-sectlabel" id="ho-notes-h">Notes</h2></div>
           <div className="ho-f">
             <label htmlFor="f-notes">Notes</label>
             <textarea id="f-notes" style={{ minHeight: 120 }} value={shared.notes} onChange={(e) => setField("notes", e.target.value)} placeholder="What happened, what the next shift needs to know" />
@@ -565,6 +572,7 @@ export function TonightView() {
             <textarea id="f-todo" value={shared.todo} onChange={(e) => setField("todo", e.target.value)} placeholder="One per line" /></div>
           <div className="ho-f ho-haiku"><label htmlFor="f-haiku">Handover haiku</label>
             <textarea id="f-haiku" value={shared.haiku} onChange={(e) => setField("haiku", e.target.value)} placeholder="Three lines, as ever" /></div>
+          </section>
         </form>
 
         <section className="ho-module ho-mstack" aria-labelledby="ho-maint-h">

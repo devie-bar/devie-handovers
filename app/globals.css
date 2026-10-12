@@ -100,8 +100,6 @@ body {
 :where(.ho-app) .ho-tab{display:inline-flex;align-items:center;min-height:var(--ctl);background:none;border:0;border-bottom:2px solid transparent;font-family:var(--dv-display);font-size:19px;font-weight:200;letter-spacing:-.05em;text-transform:uppercase;text-decoration:none;line-height:1.1;color:var(--dv-copper-soft);padding:9px 11px;cursor:pointer}
 :where(.ho-app) .ho-tab.on{color:#fff;border-bottom-color:var(--dv-copper)}
 :where(.ho-app) .ho-tab:hover{color:#fff}
-:where(.ho-app) .ho-tabn,:where(.ho-app) .ho-navpanel-item .ho-tabn{font-family:var(--dv-ui);font-size:11px;font-weight:600;letter-spacing:0;color:var(--dv-copper-soft);margin-left:6px;vertical-align:2px}
-:where(.ho-app) .ho-navpanel-item .ho-tabn{color:var(--dv-copper-deep)}
 @media (max-width:839px){:where(.ho-app) .ho-tab{padding:8px 14px;min-height:44px}}
 :where(.ho-app) .ho-navmeasure{position:absolute;left:0;right:0;top:0;height:0;overflow:hidden;visibility:hidden;pointer-events:none}
 :where(.ho-app) .ho-navmeasure .ho-toptabs{width:max-content;flex-wrap:nowrap}
@@ -223,19 +221,20 @@ body {
    ink text on copper. Weight 700 is chosen on purpose (DESIGN.md 2.3) so the two actions read as the page's commit. */
 :where(.ho-app) .ho-commit{display:flex;align-items:center;justify-content:flex-end;gap:12px 16px;flex-wrap:wrap}
 :where(.ho-app) .ho-commit-btns{display:flex;gap:16px;align-items:center}
-:where(.ho-app) .ho-toast{margin-right:auto}
 :where(.ho-app) .ho-btn.ho-act{min-height:38px;height:38px;padding:0 18px;font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--dv-ink)}
 :where(.ho-app) .ho-btn.ho-act.ho-primary:hover{background:var(--dv-copper-deep);border-color:var(--dv-copper-deep);color:#fff}
 @media (max-width:839.98px){
   :where(.ho-app) .ho-btn.ho-act{min-height:44px;height:44px}
 }
-/* Phones: the commit row is a sticky bar on the module's white, buttons full width and stacked, Publish first. */
+/* Phones: the commit module is a sticky bar at the foot of the screen, buttons full width and stacked, Publish first. */
 @media (max-width:599.98px){
-  :where(.ho-app) .ho-commit{position:sticky;bottom:0;z-index:10;flex-direction:column;align-items:stretch;gap:8px;background:var(--dv-surface);border-top:1px solid var(--dv-line);margin:0 -16px -16px;padding:12px 16px}
-  :where(.ho-app) .ho-toast{margin-right:0}
+  :where(.ho-app) .ho-commitmod{position:sticky;bottom:0;z-index:10;box-shadow:var(--dv-shadow-overlay)}
+  :where(.ho-app) .ho-commit{flex-direction:column;align-items:stretch;gap:8px}
+  :where(.ho-app) .ho-commit-msg{margin-right:0}
   :where(.ho-app) .ho-commit-btns{flex-direction:column-reverse;align-items:stretch;gap:8px}
   :where(.ho-app) .ho-btn.ho-act{width:100%;justify-content:center}
 }
+:where(.ho-app) .ho-commit-msg{margin-right:auto;display:grid;gap:2px;min-width:0}
 :where(.ho-app) .ho-toast{color:var(--dv-ink-soft)}
 :where(.ho-app) .ho-ho{padding:24px 0;border-top:1px solid var(--dv-line)}
 :where(.ho-app) .ho-ho:first-child{border-top:0;padding-top:0}
@@ -330,14 +329,7 @@ body {
   :where(.ho-app) .ho-night .ho-lx{display:none}
 }
 
-:where(.ho-app) .ho-mchips{display:grid;gap:8px}
-:where(.ho-app) .ho-mgroup{display:flex;flex-wrap:wrap;gap:8px}
-:where(.ho-app) .ho-mgroup + .ho-mgroup{border-top:1px solid var(--dv-line);padding-top:8px}
-:where(.ho-app) .ho-mchip{min-height:var(--ctl);padding:0 12px;display:inline-flex;align-items:center;gap:6px;font-size:12px;line-height:1.5;letter-spacing:.06em;text-transform:uppercase;background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-chip);color:var(--dv-green-2);cursor:pointer;transition:background .15s ease-out,border-color .15s ease-out}
-:where(.ho-app) .ho-mchip.ho-on.ho-m-warn{background:var(--dv-warn-tint);border-color:var(--dv-warn-line);color:var(--dv-warn)}
-:where(.ho-app) .ho-mchip.ho-on.ho-m-danger{background:var(--dv-danger-tint);border-color:var(--dv-danger-line);color:var(--dv-danger)}
 :where(.ho-app) .ho-mfail{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-@media (prefers-reduced-motion:reduce){:where(.ho-app) .ho-mchip{transition:none}}
 
 /* Sections as windows, ported from the Liquid Library (devie-archive/components/Archive.jsx):
    .dv-module (white, 1px line, module radius 12, padding 20/22) and the .dv-sect h4 section
@@ -350,3 +342,26 @@ body {
 :where(.ho-app) h2.ho-sectlabel{font-family:var(--dv-ui);font-size:11px;line-height:1.4;letter-spacing:.18em;text-transform:uppercase;color:var(--dv-copper-deep);font-weight:700;margin:0}
 @media (max-width:599.98px){:where(.ho-app) .ho-module{padding:16px}:where(.ho-app) .ho-room{padding:4px 12px}}
 :where(.ho-app) .ho-toast:empty{display:none}
+
+/* 85 / 86 list, in the Library's menus-tab style: hairline-divided rows in a module-radius box, a segmented
+   control (inner radius 8) on the right. Selected colours are semantic tokens; the word is always on the button. */
+:where(.ho-app) .ho-mlist{border:1px solid var(--dv-line);border-radius:var(--dv-radius-module);overflow:hidden;background:var(--dv-surface)}
+:where(.ho-app) .ho-mgroup + .ho-mgroup{border-top:1px solid var(--dv-line)}
+:where(.ho-app) .ho-mhead{padding:8px 16px;background:var(--dv-wash);border-bottom:1px solid var(--dv-line)}
+:where(.ho-app) .ho-mrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 16px;border-bottom:1px solid var(--dv-line);min-height:var(--ctl)}
+:where(.ho-app) .ho-mgroup > .ho-mrow:last-child{border-bottom:0}
+:where(.ho-app) .ho-mrow.ho-s-85{background:var(--dv-warn-tint)}
+:where(.ho-app) .ho-mrow.ho-s-86{background:var(--dv-danger-tint)}
+:where(.ho-app) .ho-mname{min-width:0;font-size:15px}
+:where(.ho-app) .ho-mseg{display:flex;flex:none;border:1px solid var(--dv-line);border-radius:var(--dv-radius-inner);overflow:hidden;background:var(--dv-surface)}
+:where(.ho-app) .ho-mseg button{min-height:var(--ctl);min-width:52px;padding:0 12px;border:0;background:none;font-size:13.5px;font-weight:500;color:var(--dv-ink-soft)}
+:where(.ho-app) .ho-mseg button + button{border-left:1px solid var(--dv-line)}
+:where(.ho-app) .ho-mseg button.ho-on{font-weight:600;color:#fff}
+:where(.ho-app) .ho-mseg button.ho-o-good{background:var(--dv-good)}
+:where(.ho-app) .ho-mseg button.ho-o-85{background:var(--dv-warn)}
+:where(.ho-app) .ho-mseg button.ho-o-86{background:var(--dv-danger)}
+/* Date navigation under the title row. */
+:where(.ho-app) .ho-datenav{flex:0 0 100%;display:flex;justify-content:center;gap:8px}
+:where(.ho-app) .ho-icon{min-width:44px;min-height:44px;justify-content:center;padding:0}
+:where(.ho-app) .ho-today{min-height:44px;padding:0 20px}
+@media (min-width:840px){:where(.ho-app) .ho-icon{min-width:32px;min-height:32px}:where(.ho-app) .ho-today{min-height:32px}}

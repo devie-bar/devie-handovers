@@ -1,21 +1,18 @@
 "use client";
 
-import type { CurrentMenu } from "@/lib/menu";
+import { menuNames, statusParts, composeStatus, type CurrentMenu, type MenuState } from "@/lib/menu";
 
-const isWord = (c: string | undefined) => !!c && /[\p{L}\p{N}]/u.test(c);
-
-// A line mentions a menu item when it starts with the name and the name ends there (so PRUNE does not match PRUNELLE).
-const lineHas = (line: string, name: string) => {
-  const l = line.trim().toLowerCase();
-  const n = name.toLowerCase();
-  return l.startsWith(n) && !isWord(l[n.length]);
-};
-
-export function MenuChips({
-  menu, failed, onRetry, value, onChange, tone, label,
+/**
+ * The 85 and 86 list, laid out like the Liquid Library's menus tab: grouped sections, one row per item with the
+ * name on the left and a Good / 85 / 86 toggle on the right. Everything is read from and written back to the two
+ * existing strings (shared.low and shared.out), so the publish row, the Slack text and the log are unchanged.
+ * (The file keeps its old name from the chip version.)
+ */
+export function MenuStatusList({
+  menu, failed, onRetry, low, out, onChange,
 }: {
   menu: CurrentMenu | null; failed: boolean; onRetry: () => void;
-  value: string; onChange: (v: string) => void; tone: "warn" | "danger"; label: string;
+  low: string; out: string; onChange: (low: string, out: string) => void;
 }) {
   if (failed) {
     return (
@@ -27,32 +24,42 @@ export function MenuChips({
   }
   if (!menu) return null;
 
-  const lines = value.split("\n");
-  const toggle = (name: string) => {
-    if (lines.some((l) => lineHas(l, name))) {
-      onChange(lines.filter((l) => !lineHas(l, name)).join("\n"));
-    } else {
-      const base = value.replace(/\s+$/, "");
-      onChange(base ? base + "\n" + name : name);
-    }
+  const names = menuNames(menu);
+  const L = statusParts(low, names);
+  const O = statusParts(out, names);
+  const stateOf = (n: string): MenuState => (O.chosen.includes(n) ? "86" : L.chosen.includes(n) ? "85" : "good");
+  const set = (n: string, st: MenuState) => {
+    const l = L.chosen.filter((x) => x !== n);
+    const o = O.chosen.filter((x) => x !== n);
+    if (st === "85") l.push(n);
+    if (st === "86") o.push(n);
+    onChange(composeStatus(names.filter((x) => l.includes(x)), L.extras), composeStatus(names.filter((x) => o.includes(x)), O.extras));
   };
-  const group = (names: string[], kind: string) => names.length > 0 && (
-    <div className="ho-mgroup" role="group" aria-label={`${label}, ${kind}`}>
-      {names.map((n) => {
-        const on = lines.some((l) => lineHas(l, n));
+  const OPTIONS: { v: MenuState; label: string }[] = [{ v: "good", label: "Good" }, { v: "85", label: "85" }, { v: "86", label: "86" }];
+  const group = (title: string, items: string[]) => items.length > 0 && (
+    <div className="ho-mgroup" role="group" aria-label={title}>
+      <div className="ho-mhead ho-label">{title}</div>
+      {items.map((n) => {
+        const st = stateOf(n);
         return (
-          <button key={n} type="button" aria-pressed={on} className={`ho-mchip ho-m-${tone}${on ? " ho-on" : ""}`} onClick={() => toggle(n)}>
-            {on && <span aria-hidden="true">✓</span>}{n}
-          </button>
+          <div key={n} className={`ho-mrow ho-s-${st}`}>
+            <span className="ho-mname">{n}</span>
+            <div className="ho-mseg" role="group" aria-label={`${n} status`}>
+              {OPTIONS.map((o) => (
+                <button key={o.v} type="button" aria-pressed={st === o.v} className={st === o.v ? `ho-on ho-o-${o.v}` : ""} onClick={() => set(n, o.v)}>{o.label}</button>
+              ))}
+            </div>
+          </div>
         );
       })}
     </div>
   );
 
   return (
-    <div className="ho-mchips">
-      {group(menu.cocktails, "cocktails")}
-      {group(menu.dishes, "dishes")}
+    <div className="ho-mlist">
+      {group("Cocktails, seasonal", menu.seasonal)}
+      {group("Cocktails, evergreen", menu.evergreen)}
+      {group("Dishes", menu.dishes)}
     </div>
   );
 }

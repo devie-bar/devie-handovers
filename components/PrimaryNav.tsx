@@ -26,8 +26,7 @@ const SECTIONS = [
 
 export function PrimaryNav() {
   const pathname = usePathname();
-  const { items, loaded, status } = useHandovers();
-  const open = items.filter((i) => i.status !== "done").length;
+  const { status } = useHandovers();
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
   const measureRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -77,9 +76,6 @@ export function PrimaryNav() {
     return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("mousedown", onDown); };
   }, [menuOpen]);
 
-  const count = (key: string) =>
-    key === "maintenance" && loaded && open > 0 ? <span className="ho-tabn ho-num" aria-label={`${open} open`}>{open}</span> : null;
-
   return (
     <>
       {compact ? (
@@ -98,7 +94,7 @@ export function PrimaryNav() {
                     key={s.key} href={s.href} className={"ho-navpanel-item" + (isActive(s.href) ? " on" : "")}
                     aria-current={isActive(s.href) ? "page" : undefined} onClick={() => setMenuOpen(false)}
                   >
-                    {s.label}{count(s.key)}
+                    {s.label}
                   </Link>
                 ))}
                 {/* The account controls leave the collapsed header, so they sit at the foot of the panel. */}
@@ -114,14 +110,14 @@ export function PrimaryNav() {
         <nav className="ho-toptabs ho-navslot" aria-label="Handovers sections">
           {SECTIONS.map((s) => (
             <Link key={s.key} href={s.href} className={"ho-tab" + (isActive(s.href) ? " on" : "")} aria-current={isActive(s.href) ? "page" : undefined}>
-              {s.label}{count(s.key)}
+              {s.label}
             </Link>
           ))}
         </nav>
       )}
       <div className="ho-navmeasure" aria-hidden="true">
         <div ref={measureRef} className="ho-toptabs">
-          {SECTIONS.map((s) => <span key={s.key} className="ho-tab">{s.label}{count(s.key)}</span>)}
+          {SECTIONS.map((s) => <span key={s.key} className="ho-tab">{s.label}</span>)}
         </div>
       </div>
     </>

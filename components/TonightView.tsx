@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useHandovers } from "@/components/HandoversProvider";
-import { MenuChips } from "@/components/MenuChips";
+import { MenuStatusList } from "@/components/MenuChips";
+import { menuNames, statusParts, composeStatus } from "@/lib/menu";
 import { MaintenancePanel } from "@/components/MaintenancePanel";
 import { cap, eur, lines } from "@/lib/format";
 import { serviceDateNow, timeHM } from "@/lib/paris";
@@ -56,6 +57,13 @@ function seedFromHandover(prev: HandoverRow): DraftRow {
     },
     square: prev.square, booked: prev.booked,
   };
+}
+
+// The service date a day earlier or later, as yyyy-mm-dd.
+function shiftDate(d: string, by: number): string {
+  const [y, m, day] = d.split("-").map(Number);
+  const x = new Date(Date.UTC(y, m - 1, day + by));
+  return `${x.getUTCFullYear()}-${String(x.getUTCMonth() + 1).padStart(2, "0")}-${String(x.getUTCDate()).padStart(2, "0")}`;
 }
 
 // "Saturday 11 October" for a yyyy-mm-dd service date.
@@ -273,6 +281,9 @@ export function TonightView() {
     setPublishing(false);
   }
 
+  const menuList = menuNames(menu);
+  const lowP = statusParts(shared.low, menuList);
+  const outP = statusParts(shared.out, menuList);
   const sq = draft.square;
   const sqSub = sqBusy ? "Pulling…" : sqErr ?? (sq ? `${sq.totals.orders} orders, pulled ${timeHM(sq.pulledAt)}` : "Not pulled yet");
 
@@ -307,6 +318,15 @@ export function TonightView() {
             </select>
           </div>
           <button type="button" className="ho-btn ho-sm ho-pull" disabled={sqBusy} onClick={pullSquare}>Pull tonight&apos;s sales from Square</button>
+          <div className="ho-datenav" role="group" aria-label="Move between nights">
+            <button type="button" className="ho-btn ho-icon" aria-label="Previous day" onClick={() => setDate(shiftDate(date, -1))}>
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+            <button type="button" className="ho-btn ho-today" disabled={date === serviceDateNow()} onClick={() => setDate(serviceDateNow())}>Today</button>
+            <button type="button" className="ho-btn ho-icon" aria-label="Next day" disabled={date >= serviceDateNow()} onClick={() => setDate(shiftDate(date, 1))}>
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+          </div>
         </div>
 
         <section className="ho-module ho-mstack" aria-labelledby="ho-tonight-h">
@@ -441,7 +461,7 @@ export function TonightView() {
           </div>
         </section>
 
-        <form className="ho-module ho-mstack" onSubmit={publish} autoComplete="off">
+        <form id="handover-form" className="ho-module ho-mstack" onSubmit={publish} autoComplete="off">
           <div className="ho-secthead">
             <h2 className="ho-sectlabel">Handover</h2>
             <span className="ho-caption">
@@ -455,13 +475,18 @@ export function TonightView() {
 
           <div className="ho-f"><label htmlFor="f-vips">VIPs</label>
             <textarea id="f-vips" value={shared.vips} onChange={(e) => setField("vips", e.target.value)} placeholder="Who came in, who they were with, anything to remember next time" /></div>
+          <div className="ho-f">
+            <span className="ho-label">Menu status</span>
+            <MenuStatusList
+              menu={menu} failed={menuFailed} onRetry={retryMenu} low={shared.low} out={shared.out}
+              onChange={(l, o) => { setDirtyShared(true); setShared((s) => ({ ...s, low: l, out: o })); }}
+            />
+          </div>
           <div className="ho-grid2">
-            <div className="ho-f"><label htmlFor="f-85"><span className="ho-chip ho-c85">85</span>Running low</label>
-              <MenuChips menu={menu} failed={menuFailed} onRetry={retryMenu} value={shared.low} onChange={(v) => setField("low", v)} tone="warn" label="Running low" />
-              <textarea id="f-85" value={shared.low} onChange={(e) => setField("low", e.target.value)} placeholder="One per line, e.g. LEMON, top up batch tomorrow" /></div>
-            <div className="ho-f"><label htmlFor="f-86"><span className="ho-chip ho-c86">86</span>Out</label>
-              <MenuChips menu={menu} failed={menuFailed} onRetry={retryMenu} value={shared.out} onChange={(v) => setField("out", v)} tone="danger" label="Out" />
-              <textarea id="f-86" value={shared.out} onChange={(e) => setField("out", e.target.value)} placeholder="One per line" /></div>
+            <div className="ho-f"><label htmlFor="f-85"><span className="ho-chip ho-c85">85</span>Running low, off the menu</label>
+              <textarea id="f-85" value={lowP.extras} onChange={(e) => setField("low", composeStatus(lowP.chosen, e.target.value))} placeholder="One per line, e.g. LEMON, top up batch tomorrow" /></div>
+            <div className="ho-f"><label htmlFor="f-86"><span className="ho-chip ho-c86">86</span>Out, off the menu</label>
+              <textarea id="f-86" value={outP.extras} onChange={(e) => setField("out", composeStatus(outP.chosen, e.target.value))} placeholder="One per line" /></div>
           </div>
           <div className="ho-f">
             <label htmlFor="f-notes">Notes</label>
@@ -490,18 +515,26 @@ export function TonightView() {
             <textarea id="f-todo" value={shared.todo} onChange={(e) => setField("todo", e.target.value)} placeholder="One per line" /></div>
           <div className="ho-f ho-haiku"><label htmlFor="f-haiku">Handover haiku</label>
             <textarea id="f-haiku" value={shared.haiku} onChange={(e) => setField("haiku", e.target.value)} placeholder="Three lines, as ever" /></div>
-          <div className="ho-commit">
-            <span className="ho-toast ho-body-s" aria-live="polite">{toastText}</span>
-            <div className="ho-commit-btns">
-              <button type="button" className="ho-btn ho-act" onClick={saveDraft}>Save draft</button>
-              <button type="submit" className="ho-btn ho-act ho-primary" disabled={publishing}>{testMode ? "Publish (test to me)" : published ? "Publish again" : "Publish handover"}</button>
-            </div>
-          </div>
         </form>
 
         <section className="ho-module ho-mstack" aria-labelledby="ho-maint-h">
           <div className="ho-secthead"><h2 className="ho-sectlabel" id="ho-maint-h">Maintenance</h2></div>
           <MaintenancePanel />
+        </section>
+
+        <section className="ho-module ho-commitmod" aria-label="Save and publish">
+          <div className="ho-commit">
+            <div className="ho-commit-msg">
+              <span className="ho-caption">
+                {published && draft.published_at ? `Published by ${draft.published_by} at ${timeHM(draft.published_at)}` : "Draft"}
+              </span>
+              <span className="ho-toast ho-body-s" aria-live="polite">{toastText}</span>
+            </div>
+            <div className="ho-commit-btns">
+              <button type="button" className="ho-btn ho-act" onClick={saveDraft}>Save draft</button>
+              <button type="submit" form="handover-form" className="ho-btn ho-act ho-primary" disabled={publishing}>{testMode ? "Publish (test to me)" : published ? "Publish again" : "Publish handover"}</button>
+            </div>
+          </div>
         </section>
       </div>
     </section>

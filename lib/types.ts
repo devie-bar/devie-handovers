@@ -93,6 +93,6 @@ export interface MaintenanceItem {
   created_at?: string;
 }
 
-export const PEOPLE = ["Barney", "Tom", "Cherry", "Alex", "Leslie", "Arron", "Adam", "Sarah", "Julie", "Cassandre", "Other"];
+export const PEOPLE = ["Barney", "Tom", "Cherry", "Alex", "Arron", "Sarah", "Julie", "Cassandre", "Other"];
 export const LOCATIONS = ["Bar", "Summer", "Spring", "Autumn", "Winter", "Kitchen", "Prep", "Cave", "Toilets", "Front", "Other"];
 export const CHANNEL_LABEL = { channel: "#handovers", test: "your Slack DMs" } as const;

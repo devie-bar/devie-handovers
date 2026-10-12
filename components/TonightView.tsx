@@ -570,14 +570,19 @@ export function TonightView() {
           </div>
           <div className="ho-f"><label htmlFor="f-todo">To do and MEP for tomorrow</label>
             <textarea id="f-todo" value={shared.todo} onChange={(e) => setField("todo", e.target.value)} placeholder="One per line" /></div>
-          <div className="ho-f ho-haiku"><label htmlFor="f-haiku">Handover haiku</label>
-            <textarea id="f-haiku" value={shared.haiku} onChange={(e) => setField("haiku", e.target.value)} placeholder="Three lines, as ever" /></div>
           </section>
         </form>
 
         <section className="ho-module ho-mstack" aria-labelledby="ho-maint-h">
           <div className="ho-secthead"><h2 className="ho-sectlabel" id="ho-maint-h">Maintenance</h2></div>
           <MaintenancePanel />
+        </section>
+
+        {/* Publish reads the shared fields from state, so this field outside the form still goes out with it. */}
+        <section className="ho-module ho-mstack" aria-labelledby="ho-haiku-h">
+          <div className="ho-secthead"><h2 className="ho-sectlabel" id="ho-haiku-h">Haiku</h2></div>
+          <div className="ho-f ho-haiku"><label className="ho-sr" htmlFor="f-haiku">Handover haiku</label>
+            <textarea id="f-haiku" value={shared.haiku} onChange={(e) => setField("haiku", e.target.value)} placeholder="Three lines, as ever" /></div>
         </section>
 
         <section className="ho-module ho-commitmod" aria-label="Save and publish">

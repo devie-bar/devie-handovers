@@ -59,13 +59,6 @@ function seedFromHandover(prev: HandoverRow): DraftRow {
   };
 }
 
-// The service date a day earlier or later, as yyyy-mm-dd.
-function shiftDate(d: string, by: number): string {
-  const [y, m, day] = d.split("-").map(Number);
-  const x = new Date(Date.UTC(y, m - 1, day + by));
-  return `${x.getUTCFullYear()}-${String(x.getUTCMonth() + 1).padStart(2, "0")}-${String(x.getUTCDate()).padStart(2, "0")}`;
-}
-
 // "Saturday 11 October" for a yyyy-mm-dd service date.
 function dateTitle(d: string): string {
   const [y, m, day] = d.split("-").map(Number);
@@ -318,15 +311,6 @@ export function TonightView() {
             </select>
           </div>
           <button type="button" className="ho-btn ho-sm ho-pull" disabled={sqBusy} onClick={pullSquare}>Pull tonight&apos;s sales from Square</button>
-          <div className="ho-datenav" role="group" aria-label="Move between nights">
-            <button type="button" className="ho-btn ho-icon" aria-label="Previous day" onClick={() => setDate(shiftDate(date, -1))}>
-              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </button>
-            <button type="button" className="ho-btn ho-today" disabled={date === serviceDateNow()} onClick={() => setDate(serviceDateNow())}>Today</button>
-            <button type="button" className="ho-btn ho-icon" aria-label="Next day" disabled={date >= serviceDateNow()} onClick={() => setDate(shiftDate(date, 1))}>
-              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </button>
-          </div>
         </div>
 
         <section className="ho-module ho-mstack" aria-labelledby="ho-tonight-h">

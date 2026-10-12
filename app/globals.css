@@ -360,8 +360,3 @@ body {
 :where(.ho-app) .ho-mseg button.ho-o-good{background:var(--dv-good)}
 :where(.ho-app) .ho-mseg button.ho-o-85{background:var(--dv-warn)}
 :where(.ho-app) .ho-mseg button.ho-o-86{background:var(--dv-danger)}
-/* Date navigation under the title row. */
-:where(.ho-app) .ho-datenav{flex:0 0 100%;display:flex;justify-content:center;gap:8px}
-:where(.ho-app) .ho-icon{min-width:44px;min-height:44px;justify-content:center;padding:0}
-:where(.ho-app) .ho-today{min-height:44px;padding:0 20px}
-@media (min-width:840px){:where(.ho-app) .ho-icon{min-width:32px;min-height:32px}:where(.ho-app) .ho-today{min-height:32px}}

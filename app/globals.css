@@ -289,15 +289,16 @@ body {
   :where(.ho-app) .ho-skel i::after,:where(.ho-app) .ho-swap-in-r,:where(.ho-app) .ho-swap-in-l{animation:none}
 }
 
-:where(.ho-app) .ho-head{display:flex;align-items:center;gap:12px 24px;flex-wrap:wrap}
+:where(.ho-app) .ho-head{display:flex;align-items:baseline;gap:12px 24px;flex-wrap:wrap}
 :where(.ho-app) .ho-hl{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+:where(.ho-app) .ho-hl .ho-caption{margin-left:4px}
 :where(.ho-app) .ho-quiet{background:none;border-color:transparent;color:var(--dv-ink-soft);padding:0 8px}
-:where(.ho-app) .ho-pull{margin-left:auto}
+
 @media (max-width:599.98px){:where(.ho-app) .ho-pull{width:100%;justify-content:center}}
 :where(.ho-app) .ho-hl input[type=date]{min-height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 12px}
-:where(.ho-app) .ho-author{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+:where(.ho-app) .ho-author{display:flex;align-items:baseline;gap:8px;margin-left:auto}
 :where(.ho-app) .ho-author select{height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 10px;min-width:160px}
-@media (max-width:599.98px){:where(.ho-app) .ho-author{width:100%}:where(.ho-app) .ho-author select{flex:1}}
+@media (max-width:599.98px){:where(.ho-app) .ho-author{width:100%;margin-left:0}:where(.ho-app) .ho-author select{flex:1}}
 :where(.ho-app) .ho-night{padding-top:16px;border-top:1px solid var(--dv-line)}
 
 :where(.ho-app) .ho-mchips{display:grid;gap:8px}

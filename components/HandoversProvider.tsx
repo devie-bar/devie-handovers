@@ -36,8 +36,6 @@ export const useHandovers = () => {
   return v;
 };
 
-const AUTHOR_KEY = "dv-ho-author";
-
 // "Alex Francis" becomes "Alex" when Alex is on the list; otherwise the name is used as given.
 function resolveMe(name: string): string {
   const first = name.trim().split(/\s+/)[0]?.toLowerCase();
@@ -48,7 +46,7 @@ export function HandoversProvider({ displayName, children }: { displayName: stri
   const supabase = useMemo(() => createClient(), []);
   const me = useMemo(() => resolveMe(displayName), [displayName]);
   const people = useMemo(() => (PEOPLE.includes(me) ? PEOPLE : [me, ...PEOPLE]), [me]);
-  const [author, setAuthorState] = useState(me);
+  const [author, setAuthorState] = useState("");
   const [items, setItems] = useState<MaintenanceItem[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
@@ -65,17 +63,8 @@ export function HandoversProvider({ displayName, children }: { displayName: stri
   }, [supabase]);
   useEffect(() => { retryMenu(); }, [retryMenu]);
 
-  // A handover author picked by hand on this device wins over the signed-in name.
-  useEffect(() => {
-    try {
-      const a = localStorage.getItem(AUTHOR_KEY);
-      if (a && people.includes(a)) setAuthorState(a);
-    } catch { /* storage unavailable */ }
-  }, [people]);
-  const setAuthor = useCallback((a: string) => {
-    setAuthorState(a);
-    try { localStorage.setItem(AUTHOR_KEY, a); } catch { /* storage unavailable */ }
-  }, []);
+  // The handover author is never prefilled or remembered: each handover, someone picks themselves.
+  const setAuthor = useCallback((a: string) => setAuthorState(a), []);
 
   const upsertLocal = useCallback((row: MaintenanceItem) => {
     setItems((cur) => (cur.some((i) => i.id === row.id) ? cur.map((i) => (i.id === row.id ? row : i)) : [...cur, row]));
@@ -134,13 +123,13 @@ export function HandoversProvider({ displayName, children }: { displayName: stri
   const addItem = useCallback(async (title: string, location: string) => {
     const { data, error } = await supabase
       .from("maintenance_items")
-      .insert({ title, location, reported_by: author, reported_on: serviceDateNow(), status: "open", updates: [] })
+      .insert({ title, location, reported_by: author || me, reported_on: serviceDateNow(), status: "open", updates: [] })
       .select()
       .single();
     if (error) return error.message;
     upsertLocal(data as MaintenanceItem);
     return null;
-  }, [supabase, author, upsertLocal]);
+  }, [supabase, author, me, upsertLocal]);
 
   const patch = useCallback(async (it: MaintenanceItem, p: Partial<MaintenanceItem>) => {
     const { data, error } = await supabase.from("maintenance_items").update(p).eq("id", it.id).select().single();
@@ -151,16 +140,16 @@ export function HandoversProvider({ displayName, children }: { displayName: stri
 
   const setItemStatus = useCallback((it: MaintenanceItem, st: MaintenanceStatus) => {
     const today = serviceDateNow();
-    const updates = [...(it.updates || []), { on: today, by: author, text: st === "done" ? "Marked done" : st === "progress" ? "Taken on" : "Reopened" }];
+    const updates = [...(it.updates || []), { on: today, by: author || me, text: st === "done" ? "Marked done" : st === "progress" ? "Taken on" : "Reopened" }];
     const p: Partial<MaintenanceItem> = { status: st, updates };
-    if (st === "done") { p.done_on = today; p.done_by = author; }
+    if (st === "done") { p.done_on = today; p.done_by = author || me; }
     if (st !== "done") { p.done_on = null; p.done_by = null; }
     return patch(it, p);
-  }, [author, patch]);
+  }, [author, me, patch]);
 
   const addUpdate = useCallback((it: MaintenanceItem, text: string) => {
-    return patch(it, { updates: [...(it.updates || []), { on: serviceDateNow(), by: author, text }] });
-  }, [author, patch]);
+    return patch(it, { updates: [...(it.updates || []), { on: serviceDateNow(), by: author || me, text }] });
+  }, [author, me, patch]);
 
   const value: Ctx = {
     supabase, me, people, author, setAuthor, items, loaded, failed, status,

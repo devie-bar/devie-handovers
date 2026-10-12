@@ -68,7 +68,7 @@ function dateTitle(d: string): string {
 type Edit = { by?: string; covers?: string; notes?: string };
 
 export function TonightView() {
-  const { supabase, me, people, author, setAuthor, items, addItem, menu, menuFailed, retryMenu } = useHandovers();
+  const { supabase, people, author, setAuthor, items, addItem, menu, menuFailed, retryMenu } = useHandovers();
   const [date, setDate] = useState(serviceDateNow());
   const [draft, setDraft] = useState<DraftRow>(() => blankDraft(serviceDateNow()));
   const [edits, setEdits] = useState<Partial<Record<RoomKey, Edit>>>({});
@@ -152,7 +152,7 @@ export function TonightView() {
     const covers = e.covers ?? (storedCovers ? String(storedCovers) : "");
     return {
       r, bk, closed,
-      by: e.by ?? (r.by || (r.submittedAt ? "" : me)),
+      by: e.by ?? (r.by || ""),
       covers,
       notes: e.notes ?? (r.notes || ""),
       num: Number(covers || 0),
@@ -234,6 +234,7 @@ export function TonightView() {
   async function publish(e: React.FormEvent) {
     e.preventDefault();
     const mgr = author;
+    if (!mgr) { toast("Pick the handover author first."); document.getElementById("author")?.focus(); return; }
     const sh = readShared();
     const rooms: Record<string, HandoverRoom> = {};
     states.forEach((s) => {
@@ -294,16 +295,17 @@ export function TonightView() {
             ) : (
               <button type="button" className="ho-btn ho-sm ho-quiet" onClick={() => setPickDate(true)}>Change date</button>
             )}
+            <span className="ho-caption">
+              {published && draft.published_at ? `Published by ${draft.published_by} at ${timeHM(draft.published_at)}` : "Draft"}
+            </span>
           </div>
           <div className="ho-author">
             <label className="ho-caption" htmlFor="author">Handover author</label>
             <select id="author" value={author} onChange={(e) => setAuthor(e.target.value)}>
+              <option value="">Select author</option>
               {(author && !people.includes(author) ? [author, ...people] : people).map((p) => <option key={p}>{p}</option>)}
             </select>
           </div>
-          <span className="ho-caption">
-            {published && draft.published_at ? `Published by ${draft.published_by} at ${timeHM(draft.published_at)}` : "Draft"}
-          </span>
           <button type="button" className="ho-btn ho-sm ho-pull" disabled={sqBusy} onClick={pullSquare}>Pull tonight&apos;s sales from Square</button>
         </div>
 
@@ -395,7 +397,7 @@ export function TonightView() {
                         <div className="ho-by">
                           <label className="ho-caption" htmlFor={`by-${k}`}>Reported by</label>
                           <select id={`by-${k}`} value={s.by} onChange={(e) => setEdit(k, { by: e.target.value })}>
-                            <option value="">Reporting for {name}</option>
+                            <option value="">Select who is reporting</option>
                             {(s.by && !people.includes(s.by) ? [s.by, ...people] : people).map((p) => <option key={p}>{p}</option>)}
                           </select>
                         </div>

@@ -491,9 +491,11 @@ export function TonightView() {
           <div className="ho-f ho-haiku"><label htmlFor="f-haiku">Handover haiku</label>
             <textarea id="f-haiku" value={shared.haiku} onChange={(e) => setField("haiku", e.target.value)} placeholder="Three lines, as ever" /></div>
           <div className="ho-commit">
-            <button type="button" className="ho-btn" onClick={saveDraft}>Save draft</button>
-            <button type="submit" className="ho-btn ho-primary" disabled={publishing}>{testMode ? "Publish (test to me)" : published ? "Publish again" : "Publish handover"}</button>
-            <span className="ho-toast" aria-live="polite">{toastText}</span>
+            <span className="ho-toast ho-body-s" aria-live="polite">{toastText}</span>
+            <div className="ho-commit-btns">
+              <button type="button" className="ho-btn ho-act" onClick={saveDraft}>Save draft</button>
+              <button type="submit" className="ho-btn ho-act ho-primary" disabled={publishing}>{testMode ? "Publish (test to me)" : published ? "Publish again" : "Publish handover"}</button>
+            </div>
           </div>
         </form>
 

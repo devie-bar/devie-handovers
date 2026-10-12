@@ -218,11 +218,25 @@ body {
   :where(.ho-app) .ho-btn.ho-sm{min-height:var(--ctl)}
 }
 :where(.ho-app) .ho-btn[disabled]{opacity:.6;cursor:default}
-:where(.ho-app) .ho-commit{position:sticky;bottom:0;background:var(--dv-paper);border-top:1px solid var(--dv-line);margin:0 calc(-1 * var(--gutter));padding:12px var(--gutter);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-@media (min-width:840px){
-  :where(.ho-app) .ho-commit{position:static;border:0;margin:0;padding:0}
+/* Commit row. Size and weight match the Library's .dv-new primary action (devie-archive Archive.jsx):
+   38px high, 0 18px padding, Epilogue 13px, weight 700, .04em tracking, copper fill. DESIGN.md 2.2:
+   ink text on copper. Weight 700 is chosen on purpose (DESIGN.md 2.3) so the two actions read as the page's commit. */
+:where(.ho-app) .ho-commit{display:flex;align-items:center;justify-content:flex-end;gap:12px 16px;flex-wrap:wrap}
+:where(.ho-app) .ho-commit-btns{display:flex;gap:16px;align-items:center}
+:where(.ho-app) .ho-toast{margin-right:auto}
+:where(.ho-app) .ho-btn.ho-act{min-height:38px;height:38px;padding:0 18px;font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--dv-ink)}
+:where(.ho-app) .ho-btn.ho-act.ho-primary:hover{background:var(--dv-copper-deep);border-color:var(--dv-copper-deep);color:#fff}
+@media (max-width:839.98px){
+  :where(.ho-app) .ho-btn.ho-act{min-height:44px;height:44px}
 }
-:where(.ho-app) .ho-toast{font-size:13.5px;color:var(--dv-ink-soft)}
+/* Phones: the commit row is a sticky bar on the module's white, buttons full width and stacked, Publish first. */
+@media (max-width:599.98px){
+  :where(.ho-app) .ho-commit{position:sticky;bottom:0;z-index:10;flex-direction:column;align-items:stretch;gap:8px;background:var(--dv-surface);border-top:1px solid var(--dv-line);margin:0 -16px -16px;padding:12px 16px}
+  :where(.ho-app) .ho-toast{margin-right:0}
+  :where(.ho-app) .ho-commit-btns{flex-direction:column-reverse;align-items:stretch;gap:8px}
+  :where(.ho-app) .ho-btn.ho-act{width:100%;justify-content:center}
+}
+:where(.ho-app) .ho-toast{color:var(--dv-ink-soft)}
 :where(.ho-app) .ho-ho{padding:24px 0;border-top:1px solid var(--dv-line)}
 :where(.ho-app) .ho-ho:first-child{border-top:0;padding-top:0}
 :where(.ho-app) .ho-ho .ho-hd{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
@@ -335,3 +349,4 @@ body {
 :where(.ho-app) .ho-mstack > .ho-secthead{margin-bottom:0}
 :where(.ho-app) h2.ho-sectlabel{font-family:var(--dv-ui);font-size:11px;line-height:1.4;letter-spacing:.18em;text-transform:uppercase;color:var(--dv-copper-deep);font-weight:700;margin:0}
 @media (max-width:599.98px){:where(.ho-app) .ho-module{padding:16px}:where(.ho-app) .ho-room{padding:4px 12px}}
+:where(.ho-app) .ho-toast:empty{display:none}

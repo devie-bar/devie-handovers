@@ -36,7 +36,7 @@ export interface SquareSummary {
     card: number; cash: number; otherTender: number; items: number; net: number; avg: number;
   };
   rooms: Record<RoomKey | "other", SquareRoom>;
-  categories: { name: string; qty: number; gross: number }[];
+  categories: { name: string; qty: number; gross: number; net?: number }[];
   top: { name: string; qty: number; gross: number }[];
 }
 

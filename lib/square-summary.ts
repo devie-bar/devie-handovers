@@ -7,7 +7,7 @@ export interface SquareOrder {
   total_tax_money?: Money;
   total_discount_money?: Money;
   total_money?: Money;
-  line_items?: { catalog_object_id?: string; name?: string; quantity?: string; gross_sales_money?: Money }[];
+  line_items?: { catalog_object_id?: string; name?: string; quantity?: string; gross_sales_money?: Money; total_discount_money?: Money }[];
   tenders?: { type?: string; amount_money?: Money }[];
 }
 
@@ -22,7 +22,7 @@ export function summariseOrders(orders: SquareOrder[], cat: Record<string, strin
   const mk = () => ({ tables: new Set<string>(), orders: 0, gross: 0, tips: 0 });
   const rooms = { summer: mk(), spring: mk(), autumn: mk(), other: mk() };
   const T = { orders: 0, gross: 0, discount: 0, tax: 0, tips: 0, total: 0, card: 0, cash: 0, otherTender: 0, items: 0, net: 0, avg: 0 };
-  const cats: Record<string, { qty: number; gross: number }> = {};
+  const cats: Record<string, { qty: number; gross: number; net: number }> = {};
   const itemsQ: Record<string, { qty: number; gross: number }> = {};
   for (const o of orders) {
     T.orders++;
@@ -39,8 +39,9 @@ export function summariseOrders(orders: SquareOrder[], cat: Record<string, strin
       const q = Number(li.quantity || 0);
       T.gross += g; r.gross += g; T.items += q;
       const c = (li.catalog_object_id && cat[li.catalog_object_id]) || "Other";
-      cats[c] = cats[c] || { qty: 0, gross: 0 };
-      cats[c].qty += q; cats[c].gross += g;
+      cats[c] = cats[c] || { qty: 0, gross: 0, net: 0 };
+      // Net per category is gross minus the discounts Square apportions to the line, like its "Ventes nettes".
+      cats[c].qty += q; cats[c].gross += g; cats[c].net += g - (li.total_discount_money?.amount || 0);
       const nm = (li.name || "").replace(/_v\d+$/, "");
       itemsQ[nm] = itemsQ[nm] || { qty: 0, gross: 0 };
       itemsQ[nm].qty += q; itemsQ[nm].gross += g;

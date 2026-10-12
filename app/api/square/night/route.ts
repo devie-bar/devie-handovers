@@ -76,24 +76,29 @@ export async function GET(request: Request) {
     } while (cursor);
 
     const ids = [...new Set(orders.flatMap((o) => (o.line_items || []).map((l) => l.catalog_object_id).filter((x): x is string => !!x)))];
-    const cat: Record<string, string> = {};
+    // Variation id -> reporting category id. Square returns the parent ITEMs as related objects, but not the
+    // CATEGORY objects those items point to (one hop only), so the names are resolved in a second lookup.
+    const catIdOf: Record<string, string | undefined> = {};
     for (let i = 0; i < ids.length; i += 100) {
       const p = await sq<{ objects?: CatObj[]; related_objects?: CatObj[] }>(token, "/catalog/batch-retrieve", {
         object_ids: ids.slice(i, i + 100),
         include_related_objects: true,
       });
-      const names: Record<string, string | undefined> = {};
       const itemOf: Record<string, CatObj> = {};
-      for (const r of p.related_objects || []) {
-        if (r.type === "CATEGORY") names[r.id] = r.category_data?.name;
-        if (r.type === "ITEM") itemOf[r.id] = r;
-      }
+      for (const r of p.related_objects || []) if (r.type === "ITEM") itemOf[r.id] = r;
       for (const o of p.objects || []) {
         const item = o.type === "ITEM" ? o : itemOf[o.item_variation_data?.item_id || ""];
-        const cid = item?.item_data?.reporting_category?.id || item?.item_data?.categories?.[0]?.id;
-        cat[o.id] = (cid && names[cid]) || "Other";
+        catIdOf[o.id] = item?.item_data?.reporting_category?.id || item?.item_data?.categories?.[0]?.id;
       }
     }
+    const catNames: Record<string, string | undefined> = {};
+    const catIds = [...new Set(Object.values(catIdOf).filter((x): x is string => !!x))];
+    for (let i = 0; i < catIds.length; i += 100) {
+      const p = await sq<{ objects?: CatObj[] }>(token, "/catalog/batch-retrieve", { object_ids: catIds.slice(i, i + 100) });
+      for (const o of p.objects || []) if (o.type === "CATEGORY") catNames[o.id] = o.category_data?.name;
+    }
+    const cat: Record<string, string> = {};
+    for (const [id, cid] of Object.entries(catIdOf)) cat[id] = (cid && catNames[cid]) || "Other";
 
     const summary = summariseOrders(orders, cat);
     return NextResponse.json({ ok: true, date, orderCount: orders.length, summary });

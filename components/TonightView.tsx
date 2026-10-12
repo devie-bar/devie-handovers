@@ -349,8 +349,8 @@ export function TonightView() {
                     </tbody>
                   </table>
                   <table className="ho-sqt">
-                    <thead><tr><th>Category</th><th className="ho-n">Items</th><th className="ho-n">Gross</th></tr></thead>
-                    <tbody>{sq.categories.map((c) => <tr key={c.name}><td>{c.name}</td><td className="ho-n">{c.qty}</td><td className="ho-n">{eur(c.gross)}</td></tr>)}</tbody>
+                    <thead><tr><th>Category</th><th className="ho-n">Items</th><th className="ho-n">Gross</th><th className="ho-n">Net</th></tr></thead>
+                    <tbody>{sq.categories.map((c) => <tr key={c.name}><td>{c.name}</td><td className="ho-n">{c.qty}</td><td className="ho-n">{eur(c.gross)}</td><td className="ho-n">{c.net == null ? "" : eur(c.net)}</td></tr>)}</tbody>
                   </table>
                   <table className="ho-sqt">
                     <thead><tr><th>Item</th><th className="ho-n">Qty</th><th className="ho-n">Gross</th></tr></thead>

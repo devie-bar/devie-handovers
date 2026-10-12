@@ -127,7 +127,7 @@ body {
 :where(.ho-app) .ho-st{font-size:12px;color:var(--dv-green-soft);white-space:nowrap}
 :where(.ho-app) .ho-ctl{min-height:var(--ctl);background:transparent;border:1px solid var(--dv-copper-soft);color:#fff;font-size:12.5px;letter-spacing:.03em;padding:0 14px;border-radius:var(--dv-radius-control);cursor:pointer;text-transform:capitalize}
 :where(.ho-app) .ho-ctl:hover{background:rgba(255,255,255,.09)}
-:where(.ho-app) .ho-wrap{max-width:1280px;margin:0 auto;padding:32px var(--gutter) 96px}
+:where(.ho-app) .ho-wrap{max-width:1280px;margin:0 auto;padding:32px var(--gutter) calc(96px + env(safe-area-inset-bottom,0px))}
 @media (min-width:840px){
   :where(.ho-app) .ho-wrap{padding-top:48px}
 }
@@ -228,7 +228,6 @@ body {
 }
 /* Phones: the commit module is a sticky bar at the foot of the screen, buttons full width and stacked, Publish first. */
 @media (max-width:599.98px){
-  :where(.ho-app) .ho-commitmod{position:sticky;bottom:0;z-index:10;box-shadow:var(--dv-shadow-overlay)}
   :where(.ho-app) .ho-commit{flex-direction:column;align-items:stretch;gap:8px}
   :where(.ho-app) .ho-commit-msg{margin-right:0}
   :where(.ho-app) .ho-commit-btns{flex-direction:column-reverse;align-items:stretch;gap:8px}
@@ -376,3 +375,8 @@ body {
 :where(.ho-app) .ho-ho .ho-kv dt.ho-label{font-size:11px;letter-spacing:.18em;font-weight:700;color:var(--dv-copper-deep)}
 @media (max-width:599.98px){:where(.ho-app) .ho-logmod{padding:4px 16px}}
 @media (prefers-reduced-motion:reduce){:where(.ho-app) .ho-lbtn .ho-chev,:where(.ho-app) .ho-lbody{transition:none}}
+
+/* The Save and Publish module floats at the foot of the viewport at every width (shadow is allowed on sticky bars,
+   per the DESIGN.md shadow rule). It stays in the page flow after Maintenance, so nothing is hidden behind it at the end. */
+:where(.ho-app) .ho-commitmod{position:sticky;bottom:0;z-index:10;box-shadow:0 -6px 20px rgba(2,91,76,.07);padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+@media (max-width:599.98px){:where(.ho-app) .ho-commitmod{padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}

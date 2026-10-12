@@ -309,9 +309,9 @@ export function TonightView() {
           <button type="button" className="ho-btn ho-sm ho-pull" disabled={sqBusy} onClick={pullSquare}>Pull tonight&apos;s sales from Square</button>
         </div>
 
-        <div className="ho-sqk ho-night">
+        <div className="ho-night">
           <div><span className="ho-display ho-num">{total}</span><span className="ho-label">Total covers</span></div>
-          <div><span className="ho-display ho-num">{booked ? booked.all?.covers ?? 0 : "None"}</span><span className="ho-label">Booked in SevenRooms</span></div>
+          <div><span className="ho-display ho-num">{booked ? booked.all?.covers ?? 0 : "None"}</span><span className="ho-label" title="Booked in SevenRooms">Booked<span className="ho-lx"> in SevenRooms</span></span></div>
           {sq && (
             <>
               <div><span className="ho-display ho-num">{eur(sq.totals.net)}</span><span className="ho-label">Net sales</span></div>

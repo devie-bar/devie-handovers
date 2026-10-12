@@ -189,10 +189,11 @@ body {
 :where(.ho-app) .ho-sqt th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:600;color:var(--dv-ink-soft);padding:6px 8px;border-bottom:1px solid var(--dv-line)}
 :where(.ho-app) .ho-sqt td{padding:6px 8px;border-bottom:1px solid var(--dv-line)}
 :where(.ho-app) .ho-sqt td.ho-n,:where(.ho-app) .ho-sqt th.ho-n{text-align:right;font-variant-numeric:tabular-nums}
+/* Weight chosen on purpose (DESIGN.md 2.3: any weight other than the default is chosen and explained).
+   These cells are the figures a manager reads the night by, so they are Epilogue SemiBold in ink,
+   darker than the Ultralight/soft labels around them. */
+:where(.ho-app) .ho-sqt td.ho-n{font-family:var(--dv-ui);font-weight:600;color:var(--dv-ink)}
 :where(.ho-app) .ho-sqt tr:nth-child(even) td{background:var(--dv-wash)}
-:where(.ho-app) .ho-sqk{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px 24px}
-:where(.ho-app) .ho-sqk div{display:grid;gap:2px}
-:where(.ho-app) .ho-sqk .ho-display{font-size:26px;line-height:1.15}
 :where(.ho-app) .ho-room .ho-sqhint{font-size:12px;color:var(--dv-ink-soft)}
 :where(.ho-app) .ho-room.ho-off .ho-sqhint{display:none}
 :where(.ho-app) .ho-total{display:grid;gap:4px}
@@ -299,7 +300,19 @@ body {
 :where(.ho-app) .ho-author{display:flex;align-items:baseline;gap:8px;margin-left:auto}
 :where(.ho-app) .ho-author select{height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 10px;min-width:160px}
 @media (max-width:599.98px){:where(.ho-app) .ho-author{width:100%;margin-left:0}:where(.ho-app) .ho-author select{flex:1}}
-:where(.ho-app) .ho-night{padding-top:16px;border-top:1px solid var(--dv-line)}
+:where(.ho-app) .ho-night{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px 24px;padding-top:16px;border-top:1px solid var(--dv-line)}
+:where(.ho-app) .ho-night > div{display:grid;gap:2px;flex:0 0 auto}
+/* Weight chosen on purpose (DESIGN.md 2.3): the Ultralight default is too faint for the night's
+   headline figures, so they use PP Editorial Regular (400) at Display L (32 / 1.10). Headings stay Ultralight. */
+:where(.ho-app) .ho-night .ho-display{font-weight:400;font-size:32px;line-height:1.1}
+:where(.ho-app) .ho-night .ho-label{white-space:nowrap}
+/* Too narrow for one line: two justified rows of three, first flush left, last flush right. */
+@media (max-width:599.98px){
+  :where(.ho-app) .ho-night{display:grid;grid-template-columns:repeat(3,auto);justify-content:space-between;gap:16px 12px}
+  :where(.ho-app) .ho-night > div:nth-child(3n+2){justify-self:center}
+  :where(.ho-app) .ho-night > div:nth-child(3n){justify-self:end;text-align:right}
+  :where(.ho-app) .ho-night .ho-lx{display:none}
+}
 
 :where(.ho-app) .ho-mchips{display:grid;gap:8px}
 :where(.ho-app) .ho-mgroup{display:flex;flex-wrap:wrap;gap:8px}

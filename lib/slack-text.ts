@@ -12,7 +12,7 @@ function squareText(sq: SquareSummary | null): string {
     .filter((k) => sq.rooms[k]?.orders)
     .map((k) => `${cap(k)} ${eur(sq.rooms[k].gross)} (${sq.rooms[k].tables} tables)`)
     .join(" · ");
-  return `\n\n**Square** · net **${eur(T.net)}** · gross ${eur(T.gross)} · tips ${eur(T.tips)} · ${T.orders} orders, avg ${eur(T.avg)} · discounts ${eur(T.discount)} · card ${eur(T.card)}, cash ${eur(T.cash)}\n${rm}\n${sq.categories.map((c) => `${c.name} ${c.qty} (${eur(c.gross)})`).join(" · ")}\nTop: ${sq.top.map((t) => `${t.name} ×${t.qty}`).join(", ")}`;
+  return `\n\n**Square** · net **${eur(T.net)}** · gross ${eur(T.gross)} · tips ${eur(T.tips)} · ${T.orders} orders, avg ${eur(T.avg)} · discounts ${eur(T.discount)} · card ${eur(T.card)}, cash ${eur(T.cash)}\n${rm}\n${sq.categories.map((c) => `${c.name} ${c.qty} (${eur(c.gross)})`).join(" · ")}\nTop: ${sq.top.slice(0, 5).map((t) => `${t.name} ×${t.qty}`).join(", ")}`;
 }
 
 export function slackText(h: HandoverRow, openItems: MaintenanceItem[], link: string) {

@@ -54,7 +54,7 @@ export function summariseOrders(orders: SquareOrder[], cat: Record<string, strin
   }
   T.net = T.total - T.tax - T.tips;
   T.avg = T.orders ? Math.round(T.total / T.orders) : 0;
-  const top = Object.entries(itemsQ).sort((a, b) => b[1].qty - a[1].qty).slice(0, 5).map(([name, v]) => ({ name, ...v }));
+  const top = Object.entries(itemsQ).sort((a, b) => b[1].qty - a[1].qty).slice(0, 10).map(([name, v]) => ({ name, ...v }));
   const categories = Object.entries(cats).sort((a, b) => b[1].gross - a[1].gross).map(([name, v]) => ({ name, ...v }));
   const R = {} as Record<"summer" | "spring" | "autumn" | "other", SquareRoom>;
   (Object.keys(rooms) as (keyof typeof rooms)[]).forEach((k) => {

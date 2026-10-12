@@ -282,24 +282,25 @@ export function TonightView() {
 
       <div className="ho-stack">
         <div className="ho-head">
-          <h1>{dateTitle(date)}</h1>
-          <div className="ho-headr">
-            <div className="ho-author">
-              <label className="ho-caption" htmlFor="author">Handover author</label>
-              <select id="author" value={author} onChange={(e) => setAuthor(e.target.value)}>
-                {(author && !people.includes(author) ? [author, ...people] : people).map((p) => <option key={p}>{p}</option>)}
-              </select>
-            </div>
-            <span className="ho-caption">
-              {published && draft.published_at ? `Published by ${draft.published_by} at ${timeHM(draft.published_at)}` : "Draft"}
-            </span>
+          <div className="ho-hl">
+            <h1>{dateTitle(date)}</h1>
             {pickDate ? (
               <input type="date" id="f-date" aria-label="Service date" required autoFocus value={date}
                 onChange={(e) => e.target.value && setDate(e.target.value)} onBlur={() => setPickDate(false)} />
             ) : (
-              <button type="button" className="ho-btn ho-sm" onClick={() => setPickDate(true)}>Change date</button>
+              <button type="button" className="ho-btn ho-sm ho-quiet" onClick={() => setPickDate(true)}>Change date</button>
             )}
           </div>
+          <div className="ho-author">
+            <label className="ho-caption" htmlFor="author">Handover author</label>
+            <select id="author" value={author} onChange={(e) => setAuthor(e.target.value)}>
+              {(author && !people.includes(author) ? [author, ...people] : people).map((p) => <option key={p}>{p}</option>)}
+            </select>
+          </div>
+          <span className="ho-caption">
+            {published && draft.published_at ? `Published by ${draft.published_by} at ${timeHM(draft.published_at)}` : "Draft"}
+          </span>
+          <button type="button" className="ho-btn ho-sm ho-pull" disabled={sqBusy} onClick={pullSquare}>Pull tonight&apos;s sales from Square</button>
         </div>
 
         <div className="ho-sqk ho-night">
@@ -316,7 +317,7 @@ export function TonightView() {
         </div>
 
         <div className="ho-sq">
-          <div className="ho-mtop"><span className="ho-label">Square</span><span className="ho-caption" aria-live="polite">{sqSub}</span></div>
+          <span className="ho-caption" aria-live="polite">{sqSub}</span>
           <div className="ho-sq-out">
             {sq && (
               <>
@@ -339,13 +340,12 @@ export function TonightView() {
                   <thead><tr><th>Category</th><th className="ho-n">Items</th><th className="ho-n">Gross</th></tr></thead>
                   <tbody>{sq.categories.map((c) => <tr key={c.name}><td>{c.name}</td><td className="ho-n">{c.qty}</td><td className="ho-n">{eur(c.gross)}</td></tr>)}</tbody>
                 </table>
-                <p className="ho-caption" style={{ margin: 0 }}>Top sellers: {sq.top.map((t) => `${t.name} ×${t.qty}`).join(" · ")}</p>
+                <table className="ho-sqt">
+                  <thead><tr><th>Item</th><th className="ho-n">Qty</th><th className="ho-n">Gross</th></tr></thead>
+                  <tbody>{[...sq.top].sort((x, y) => y.qty - x.qty).map((i) => <tr key={i.name}><td>{i.name}</td><td className="ho-n">{i.qty}</td><td className="ho-n">{eur(i.gross)}</td></tr>)}</tbody>
+                </table>
               </>
             )}
-          </div>
-          <div className="ho-r">
-            <button type="button" className="ho-btn ho-sm" disabled={sqBusy} onClick={pullSquare}>Pull tonight&apos;s sales from Square</button>
-            <span className="ho-caption">Sales, tips, tables and categories for the service window, 15:00 to 06:00. Covers stay yours to type: Square does not record them per table.</span>
           </div>
         </div>
 

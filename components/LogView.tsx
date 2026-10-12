@@ -11,6 +11,7 @@ export function LogView() {
   const [rows, setRows] = useState<HandoverRow[] | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const [openOverride, setOpenOverride] = useState<Record<string, boolean>>({});
   const { skeleton, ready } = useSkeleton(rows === null && !failed);
 
   const load = useCallback(async () => {
@@ -47,22 +48,35 @@ export function LogView() {
         ) : !ready || !rows ? null : rows.length === 0 ? (
           <p className="ho-empty">No handovers posted yet. Tonight&apos;s will be the first.</p>
         ) : (
-          rows.map((h) => {
+          <div className="ho-logs">
+          {rows.map((h, idx) => {
             const r = h.rooms || {};
+            // The most recent night starts open, older nights collapsed, until someone toggles one by hand.
+            const isOpen = openOverride[h.service_date] ?? idx === 0;
             return (
-              <article className="ho-ho" key={h.service_date}>
-                <div className="ho-hd">
-                  <h2>{fmtDate(h.service_date)}</h2>
-                  <span className="ho-caption">{longDate(h.service_date)}, handover by {h.author}</span>
-                  <span className="ho-cov ho-num"><b>{h.total_covers ?? 0}</b> covers</span>
-                </div>
+              <article className={`ho-module ho-ho ho-logmod${isOpen ? " ho-open" : ""}`} key={h.service_date}>
+                <h2 className="ho-lh">
+                  <button
+                    type="button" className="ho-lbtn" aria-expanded={isOpen} aria-controls={`log-${h.service_date}`}
+                    onClick={() => setOpenOverride((cur) => ({ ...cur, [h.service_date]: !isOpen }))}
+                  >
+                    <span className="ho-ldate">{fmtDate(h.service_date)}</span>
+                    <span className="ho-caption">{longDate(h.service_date)}, handover by {h.author}</span>
+                    <span className="ho-cov ho-num"><b>{h.total_covers ?? 0}</b> covers</span>
+                    <svg className="ho-chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                      <path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </h2>
+                <div className="ho-lbody" id={`log-${h.service_date}`}>
+                <div className="ho-lin">
                 <div className="ho-rms">
                   {ROOMS.map((n) => {
                     const x = r[n.toLowerCase() as "summer"] || {};
                     return x.open === false ? (
-                      <div className="ho-off" key={n}><h3>{n}</h3><span className="ho-n">Closed</span></div>
+                      <div className="ho-off ho-rbox" key={n}><h3>{n}</h3><span className="ho-n">Closed</span></div>
                     ) : (
-                      <div key={n}>
+                      <div className="ho-rbox" key={n}>
                         <h3>{n}</h3>
                         <span className="ho-n ho-num">{x.covers ?? 0} covers{x.by ? ", reported by " + x.by : ""}</span>
                         {x.notes ? <p>{x.notes}</p> : null}
@@ -92,9 +106,12 @@ export function LogView() {
                   ) : null}
                 </dl>
                 {h.haiku ? <p className="ho-haiku-out">{h.haiku}</p> : null}
+                </div>
+                </div>
               </article>
             );
-          })
+          })}
+          </div>
         )}
       </div>
     </section>

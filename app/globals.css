@@ -240,9 +240,9 @@ body {
 @media (min-width:600px){
   :where(.ho-app) .ho-ho .ho-rms{grid-template-columns:repeat(3,1fr)}
 }
-:where(.ho-app) .ho-ho .ho-rms h3{font-weight:400}
-:where(.ho-app) .ho-ho .ho-rms .ho-n{font-size:12px;color:var(--dv-ink-soft)}
-:where(.ho-app) .ho-ho .ho-rms p{margin:4px 0 0;white-space:pre-wrap;font-size:13.5px}
+:where(.ho-app) .ho-ho .ho-rms h3,:where(.ho-app) .ho-ho > .ho-lbody .ho-rbox h3{font-weight:400}
+:where(.ho-app) .ho-ho .ho-rbox .ho-n{font-size:12px;color:var(--dv-ink-soft)}
+:where(.ho-app) .ho-ho .ho-rbox p{margin:4px 0 0;white-space:pre-wrap;font-size:13.5px}
 :where(.ho-app) .ho-ho .ho-rms .ho-off h3,:where(.ho-app) .ho-ho .ho-rms .ho-off .ho-n{color:var(--dv-ink-soft)}
 :where(.ho-app) .ho-kv{display:grid;grid-template-columns:112px 1fr;gap:8px 16px;margin:0;font-size:13.5px}
 :where(.ho-app) .ho-kv dt{padding-top:2px}

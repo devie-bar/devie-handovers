@@ -6,10 +6,10 @@ import { MenuStatusList } from "@/components/MenuChips";
 import { menuNames, statusParts, composeStatus } from "@/lib/menu";
 import { MaintenancePanel } from "@/components/MaintenancePanel";
 import { cap, eur, lines } from "@/lib/format";
-import { serviceDateNow, timeHM } from "@/lib/paris";
+import { serviceDateNow, timeHM, whenShort } from "@/lib/paris";
 import {
   CHANNEL_LABEL, LOCATIONS, ROOMS, ROOM_KEYS,
-  type DraftRow, type HandoverRoom, type HandoverRow, type RoomKey, type RoomPart, type Shared, type SquareSummary,
+  type DraftRow, type HandoverRoom, type HandoverRow, type RoomKey, type RoomPart, type SectionKey, type Shared, type SquareSummary,
 } from "@/lib/types";
 
 const BLANK_SHARED: Required<Shared> = { vips: "", low: "", out: "", notes: "", todo: "", haiku: "" };
@@ -36,7 +36,10 @@ function normalise(row: DraftRow): DraftRow {
   const b = blankDraft(row.service_date);
   return {
     ...b, ...row,
-    rooms: { summer: { ...b.rooms.summer, ...row.rooms?.summer }, spring: { ...b.rooms.spring, ...row.rooms?.spring }, autumn: { ...b.rooms.autumn, ...row.rooms?.autumn } },
+    rooms: {
+      summer: { ...b.rooms.summer, ...row.rooms?.summer }, spring: { ...b.rooms.spring, ...row.rooms?.spring }, autumn: { ...b.rooms.autumn, ...row.rooms?.autumn },
+      ...(row.rooms?.kitchen ? { kitchen: row.rooms.kitchen } : {}),
+    },
     shared: { ...BLANK_SHARED, ...row.shared },
   };
 }
@@ -44,7 +47,8 @@ function normalise(row: DraftRow): DraftRow {
 // A night that was already published before it had a draft: rebuild the draft from the log row.
 function seedFromHandover(prev: HandoverRow): DraftRow {
   const d = blankDraft(prev.service_date);
-  const rooms = {} as Record<RoomKey, RoomPart>;
+  const rooms = {} as Record<SectionKey, RoomPart>;
+  if (prev.rooms?.kitchen) rooms.kitchen = { by: prev.rooms.kitchen.by || "", notes: prev.rooms.kitchen.notes || "", submittedAt: prev.posted_at };
   ROOM_KEYS.forEach((k) => {
     const x: HandoverRoom = prev.rooms?.[k] || {};
     rooms[k] = { by: prev.author || "", covers: x.covers || 0, notes: x.notes || "", closed: x.open === false, submittedAt: prev.posted_at };
@@ -72,7 +76,7 @@ export function TonightView() {
   const { supabase, people, author, setAuthor, items, addItem, menu, menuFailed, retryMenu } = useHandovers();
   const [date, setDate] = useState(serviceDateNow());
   const [draft, setDraft] = useState<DraftRow>(() => blankDraft(serviceDateNow()));
-  const [edits, setEdits] = useState<Partial<Record<RoomKey, Edit>>>({});
+  const [edits, setEdits] = useState<Partial<Record<SectionKey, Edit>>>({});
   const [shared, setShared] = useState<Required<Shared>>({ ...BLANK_SHARED });
   const [dirtyShared, setDirtyShared] = useState(false);
   const [toastText, setToastText] = useState("");
@@ -88,7 +92,7 @@ export function TonightView() {
   const [flagTitle, setFlagTitle] = useState("");
   const [flagLoc, setFlagLoc] = useState("Bar");
   const [pickDate, setPickDate] = useState(false);
-  const [openOverride, setOpenOverride] = useState<Partial<Record<RoomKey, boolean>>>({});
+  const [openOverride, setOpenOverride] = useState<Partial<Record<SectionKey, boolean>>>({});
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const toast = useCallback((m: string) => {
@@ -166,19 +170,38 @@ export function TonightView() {
   const submittedCount = openRooms.filter((s) => s.sent).length;
   const total = openRooms.reduce((a, s) => a + s.num, 0);
 
-  const setEdit = (k: RoomKey, p: Edit) => setEdits((cur) => ({ ...cur, [k]: { ...cur[k], ...p } }));
+  const setEdit = (k: SectionKey, p: Edit) => setEdits((cur) => ({ ...cur, [k]: { ...cur[k], ...p } }));
 
   // Writes to the shared draft are partial: read the rooms, merge one room, write back.
   // A room opens or collapses by its state (unsent and open: open; otherwise collapsed) until someone toggles it by hand.
-  const clearOpen = (k: RoomKey) => setOpenOverride((cur) => { const n = { ...cur }; delete n[k]; return n; });
+  const clearOpen = (k: SectionKey) => setOpenOverride((cur) => { const n = { ...cur }; delete n[k]; return n; });
 
-  async function patchRoom(k: RoomKey, part: RoomPart) {
+  async function patchRoom(k: SectionKey, part: RoomPart) {
     const { data, error } = await supabase.from("handover_drafts").select("rooms").eq("service_date", date).single();
     if (error) throw new Error(error.message);
     const rooms = { ...(data.rooms || {}), [k]: { ...(data.rooms?.[k] || {}), ...part } };
     const { error: e2 } = await supabase.from("handover_drafts").update({ rooms }).eq("service_date", date);
     if (e2) throw new Error(e2.message);
     setDraft((d) => ({ ...d, rooms: { ...d.rooms, [k]: { ...d.rooms[k], ...part } } }));
+  }
+
+  // The kitchen reports like a room, without covers or a closed state.
+  const kr = draft.rooms.kitchen || {};
+  const kitchen = {
+    r: kr,
+    by: edits.kitchen?.by ?? (kr.by || ""),
+    notes: edits.kitchen?.notes ?? (kr.notes || ""),
+    sent: !!kr.submittedAt,
+  };
+  const kitchenOpen = openOverride.kitchen ?? !kitchen.sent;
+  async function submitKitchen() {
+    if (!kitchen.by) { toast("Pick who is reporting for kitchen before submitting."); document.getElementById("by-kitchen")?.focus(); return; }
+    try {
+      await patchRoom("kitchen", { by: kitchen.by, notes: kitchen.notes.trim(), submittedAt: new Date().toISOString() });
+      clearOpen("kitchen");
+      setEdits((cur) => { const n = { ...cur }; delete n.kitchen; return n; });
+      toast("Kitchen submitted.");
+    } catch (err) { toast("Could not submit: " + (err as Error).message); }
   }
 
   async function toggleClosed(k: RoomKey, closed: boolean) {
@@ -243,9 +266,11 @@ export function TonightView() {
     });
     const openItems = items.filter((i) => i.status !== "done");
     const postedAt = new Date().toISOString();
+    const totalCovers = Object.values(rooms).reduce((a, r) => a + (r.open ? r.covers || 0 : 0), 0);
+    if (kitchen.sent) rooms.kitchen = { notes: kitchen.r.notes || "", by: kitchen.r.by || "" };
     const row = {
       service_date: date, author: mgr, posted_at: postedAt,
-      total_covers: Object.values(rooms).reduce((a, r) => a + (r.open ? r.covers || 0 : 0), 0),
+      total_covers: totalCovers,
       rooms, vips: sh.vips, low: lines(sh.low), out: lines(sh.out), notes: sh.notes, todo: sh.todo, haiku: sh.haiku,
       open_maintenance: openItems.map((i) => i.title), square: draft.square || null, booked: draft.booked || null,
     };
@@ -278,7 +303,7 @@ export function TonightView() {
   const lowP = statusParts(shared.low, menuList);
   const outP = statusParts(shared.out, menuList);
   const sq = draft.square;
-  const sqSub = sqBusy ? "Pulling…" : sqErr ?? (sq ? `${sq.totals.orders} orders, pulled ${timeHM(sq.pulledAt)}` : "Not pulled yet");
+  const sqSub = sqBusy ? "Pulling…" : sqErr ?? (sq ? [`${sq.totals.orders} orders`, sq.window ? `${whenShort(sq.window.start)} to ${whenShort(sq.window.end)}` : "", `pulled ${timeHM(sq.pulledAt)}`].filter(Boolean).join(" · ") : "Not pulled yet");
 
   return (
     <section>
@@ -444,6 +469,47 @@ export function TonightView() {
             })}
           </div>
         </section>
+
+        <div className={`ho-room ho-kitchen ${kitchen.sent ? "ho-sent" : ""} ${kitchenOpen ? "ho-open" : ""}`}>
+          <div className="ho-rh" onClick={() => setOpenOverride((cur) => ({ ...cur, kitchen: !kitchenOpen }))}>
+            <h3>
+              <button type="button" className="ho-rtoggle" aria-expanded={kitchenOpen} aria-controls="room-kitchen" id="rh-kitchen">
+                <span className="ho-rname">Kitchen</span>
+                <span className="ho-body-s ho-rsum">
+                  {kitchen.sent ? `reported by ${kitchen.r.by || "someone"}, submitted ${timeHM(kitchen.r.submittedAt as string)}` : "Not submitted yet"}
+                </span>
+              </button>
+            </h3>
+            <svg className="ho-chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <div className="ho-rbody" id="room-kitchen" role="region" aria-labelledby="rh-kitchen">
+            <div className="ho-rin">
+              <div className="ho-r2">
+                <div className="ho-by">
+                  <label className="ho-caption" htmlFor="by-kitchen">Reported by</label>
+                  <select id="by-kitchen" value={kitchen.by} onChange={(e) => setEdit("kitchen", { by: e.target.value })}>
+                    <option value="">Select who is reporting</option>
+                    {(kitchen.by && !people.includes(kitchen.by) ? [kitchen.by, ...people] : people).map((p) => <option key={p}>{p}</option>)}
+                  </select>
+                </div>
+              </div>
+              <textarea
+                placeholder="Notes for Kitchen" aria-label="Kitchen notes" value={kitchen.notes}
+                onChange={(e) => setEdit("kitchen", { notes: e.target.value })}
+              />
+              <div className="ho-sub">
+                <button type="button" className="ho-btn ho-sm ho-primary" onClick={submitKitchen}>
+                  {kitchen.sent ? "Resubmit Kitchen" : "Submit Kitchen"}
+                </button>
+                <span className="ho-stamp">
+                  {kitchen.sent ? `Submitted by ${kitchen.r.by || "someone"} at ${timeHM(kitchen.r.submittedAt as string)}` : ""}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <form id="handover-form" className="ho-module ho-mstack" onSubmit={publish} autoComplete="off">
           <div className="ho-secthead">

@@ -100,7 +100,7 @@ export async function GET(request: Request) {
     const cat: Record<string, string> = {};
     for (const [id, cid] of Object.entries(catIdOf)) cat[id] = (cid && catNames[cid]) || "Other";
 
-    const summary = summariseOrders(orders, cat);
+    const summary = { ...summariseOrders(orders, cat), window: { start: start.toISOString(), end: end.toISOString() } };
     return NextResponse.json({ ok: true, date, orderCount: orders.length, summary });
   } catch (err) {
     const e = err as Error;

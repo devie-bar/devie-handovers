@@ -41,11 +41,15 @@ export function slackText(h: HandoverRow, openItems: MaintenanceItem[], link: st
     const head = top(`${name} · ${x.covers || 0} covers${bk && bk.covers > 0 ? ` (${bk.covers} booked)` : ""}${x.by ? ` · reported by ${x.by}` : ""}`);
     return [head, ...nonEmpty(x.notes).map(sub)].join("\n");
   };
+  const kr = rooms.kitchen;
+  const kitchen = kr && (kr.by || nonEmpty(kr.notes).length)
+    ? [top(`KITCHEN${kr.by ? ` · reported by ${kr.by}` : ""}`), ...nonEmpty(kr.notes).map(sub)]
+    : [];
   const general = nonEmpty(h.notes);
   const sections: string[] = [
     `**Handover ${fmtDate(h.service_date)} (${weekday(h.service_date)})**${h.author ? `\nby ${h.author}` : ""}`,
     `**ALL DAY** - ${h.total_covers ?? 0} covers${h.square ? ` / ${eur(h.square.totals.gross)}` : ""}`,
-    [top("GENERAL"), ...(general.length ? general.map(sub) : [sub("-")]), ...ROOMS.map(room)].join("\n"),
+    [top("GENERAL"), ...(general.length ? general.map(sub) : [sub("-")]), ...ROOMS.map(room), ...kitchen].join("\n"),
   ];
   const list = (title: string, items: string[]) => { if (items.length) sections.push([`**${title}**`, ...items.map(top)].join("\n")); };
   list("VIPs", nonEmpty(h.vips));

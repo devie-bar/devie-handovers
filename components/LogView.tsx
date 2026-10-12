@@ -84,6 +84,13 @@ export function LogView() {
                     );
                   })}
                 </div>
+                {r.kitchen ? (
+                  <div className="ho-rbox">
+                    <h3>Kitchen</h3>
+                    <span className="ho-n ho-num">{r.kitchen.by ? "Reported by " + r.kitchen.by : "Reported"}</span>
+                    {r.kitchen.notes ? <p>{r.kitchen.notes}</p> : null}
+                  </div>
+                ) : null}
                 <dl className="ho-kv">
                   {h.vips ? <><dt className="ho-label">VIPs</dt><dd>{h.vips}</dd></> : null}
                   {h.low?.length ? <><dt className="ho-label">85s</dt><dd className="ho-stock ho-s85">{h.low.map((x, i) => <span key={i}>{x}</span>)}</dd></> : null}

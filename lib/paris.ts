@@ -41,5 +41,12 @@ export function serviceWindow(date: string): { start: Date; end: Date } {
   return { start: parisInstant(y, m, d, 15), end: parisInstant(y, m, d + 1, 6) };
 }
 
+/** "Sat 11 Oct 15:00" in Paris time. */
+export function whenShort(iso: string): string {
+  const f = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const g = (t: string) => f.formatToParts(new Date(iso)).find((p) => p.type === t)?.value || "";
+  return `${g("weekday")} ${g("day")} ${g("month")} ${g("hour")}:${g("minute")}`;
+}
+
 export const timeHM = (iso: string) =>
   new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TZ });

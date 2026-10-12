@@ -1,6 +1,9 @@
 export const ROOMS = ["Summer", "Spring", "Autumn"] as const;
 export type RoomKey = "summer" | "spring" | "autumn";
 export const ROOM_KEYS: RoomKey[] = ["summer", "spring", "autumn"];
+// The kitchen reports like a room (who, notes, when) but is not one: it has no covers, no closed state, and is
+// kept out of ROOM_KEYS so totals, booked covers and the Square room table never see it.
+export type SectionKey = RoomKey | "kitchen";
 
 export interface RoomPart {
   by?: string;
@@ -36,6 +39,8 @@ export interface SquareSummary {
     card: number; cash: number; otherTender: number; items: number; net: number; avg: number;
   };
   rooms: Record<RoomKey | "other", SquareRoom>;
+  /** The service window the pull covered, ISO. Absent on pulls made before this was stored. */
+  window?: { start: string; end: string };
   categories: { name: string; qty: number; gross: number; net?: number }[];
   top: { name: string; qty: number; gross: number }[];
 }
@@ -43,7 +48,7 @@ export interface SquareSummary {
 export interface DraftRow {
   service_date: string;
   status: "draft" | "published";
-  rooms: Partial<Record<RoomKey, RoomPart>>;
+  rooms: Partial<Record<SectionKey, RoomPart>>;
   shared: Shared;
   booked: Booked | null;
   square: SquareSummary | null;
@@ -61,7 +66,7 @@ export interface HandoverRow {
   author: string | null;
   posted_at: string | null;
   total_covers: number | null;
-  rooms: Partial<Record<RoomKey, HandoverRoom>> | null;
+  rooms: Partial<Record<SectionKey, HandoverRoom>> | null;
   vips: string | null;
   low: string[] | null;
   out: string[] | null;

@@ -9,7 +9,7 @@ import { daysSince, eur, fmtDate, weekday } from "@/lib/format";
 // Multi-line text becomes one bullet per non-empty line; nested bullets are indented four spaces.
 const nonEmpty = (s: string | null | undefined) => String(s || "").split("\n").map((x) => x.trim()).filter(Boolean);
 /** "<@ID>" when the person has a Slack account, otherwise the plain name. */
-export const mention = (name: string) => (SLACK_IDS[name] ? `<@${SLACK_IDS[name]}>` : name);
+export const mention = (name: string, ids: Record<string, string> = SLACK_IDS) => (ids[name] ? `<@${ids[name]}>` : name);
 const top = (s: string) => `• ${s}`;
 const sub = (s: string) => `    ◦ ${s}`;
 
@@ -21,7 +21,7 @@ function squareBlock(sq: SquareSummary): string {
   ].join("\n");
 }
 
-export function slackText(h: HandoverRow, openItems: MaintenanceItem[], link: string) {
+export function slackText(h: HandoverRow, openItems: MaintenanceItem[], link: string, ids: Record<string, string> = SLACK_IDS) {
   const li = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
   const rooms = h.rooms || {};
   const room = (n: string) => {
@@ -32,16 +32,16 @@ export function slackText(h: HandoverRow, openItems: MaintenanceItem[], link: st
     const bk = h.booked?.rooms?.[k];
     const sr = h.square?.rooms?.[k];
     const sales = sr ? ` · ${eur(sr.gross)} (${sr.tables} table${sr.tables === 1 ? "" : "s"})` : "";
-    const head = top(`${name} · ${x.covers || 0} covers${bk && bk.covers > 0 ? ` (${bk.covers} booked)` : ""}${sales}${x.by ? ` · reported by ${mention(x.by)}` : ""}`);
+    const head = top(`${name} · ${x.covers || 0} covers${bk && bk.covers > 0 ? ` (${bk.covers} booked)` : ""}${sales}${x.by ? ` · reported by ${mention(x.by, ids)}` : ""}`);
     return [head, ...nonEmpty(x.notes).map(sub)].join("\n");
   };
   const kr = rooms.kitchen;
   const kitchen = kr && (kr.by || nonEmpty(kr.notes).length)
-    ? [top(`KITCHEN${kr.by ? ` · reported by ${mention(kr.by)}` : ""}`), ...nonEmpty(kr.notes).map(sub)]
+    ? [top(`KITCHEN${kr.by ? ` · reported by ${mention(kr.by, ids)}` : ""}`), ...nonEmpty(kr.notes).map(sub)]
     : [];
   const general = nonEmpty(h.notes);
   const sections: string[] = [
-    `**Handover ${fmtDate(h.service_date)} (${weekday(h.service_date)})**${h.author ? `\nby ${mention(h.author)}` : ""}`,
+    `**Handover ${fmtDate(h.service_date)} (${weekday(h.service_date)})**${h.author ? `\nby ${mention(h.author, ids)}` : ""}`,
     // ALL DAY, each room and the kitchen are bullets of one list, a blank line between them.
     [
       [top(`ALL DAY - ${h.total_covers ?? 0} covers${h.square ? ` · ${eur(h.square.totals.gross)}` : ""}`), ...general.map(sub)].join("\n"),

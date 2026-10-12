@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { fail, isIsoDate, requireUser } from "@/lib/api";
 import { createPublicClient } from "@/lib/supabase/server";
 import { slackText } from "@/lib/slack-text";
+import { slackIds } from "@/lib/slack-users";
 import type { HandoverRow, MaintenanceItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -49,7 +50,8 @@ export async function POST(request: Request) {
   if (me) return fail(500, "Could not read the maintenance list: " + me.message);
 
   try {
-    const { m, thread } = slackText(h as HandoverRow, (items || []) as MaintenanceItem[], LINK);
+    const ids = await slackIds(token); // never throws; falls back to lib/slack-ids.ts
+    const { m, thread } = slackText(h as HandoverRow, (items || []) as MaintenanceItem[], LINK, ids);
     const first = await post(token, { channel, text: m });
     const chan = first.channel || channel;
     if (thread && first.ts) await post(token, { channel: chan, text: thread, thread_ts: first.ts });

@@ -265,3 +265,12 @@ body {
 :where(.ho-app) .ho-author select{height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 10px;min-width:160px}
 @media (max-width:599.98px){:where(.ho-app) .ho-author{width:100%}:where(.ho-app) .ho-author select{flex:1}}
 :where(.ho-app) .ho-night{padding-top:16px;border-top:1px solid var(--dv-line)}
+
+:where(.ho-app) .ho-mchips{display:grid;gap:8px}
+:where(.ho-app) .ho-mgroup{display:flex;flex-wrap:wrap;gap:8px}
+:where(.ho-app) .ho-mgroup + .ho-mgroup{border-top:1px solid var(--dv-line);padding-top:8px}
+:where(.ho-app) .ho-mchip{min-height:var(--ctl);padding:0 12px;display:inline-flex;align-items:center;gap:6px;font-size:13.5px;line-height:1.5;background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-chip);color:inherit;cursor:pointer;transition:background .15s ease-out,border-color .15s ease-out}
+:where(.ho-app) .ho-mchip.ho-on.ho-m-warn{background:var(--dv-warn-tint);border-color:var(--dv-warn-line);color:var(--dv-warn)}
+:where(.ho-app) .ho-mchip.ho-on.ho-m-danger{background:var(--dv-danger-tint);border-color:var(--dv-danger-line);color:var(--dv-danger)}
+:where(.ho-app) .ho-mfail{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){:where(.ho-app) .ho-mchip{transition:none}}

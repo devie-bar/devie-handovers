@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { serviceDateNow } from "@/lib/paris";
+import { getCurrentMenu, type CurrentMenu } from "@/lib/menu";
 import { PEOPLE, type MaintenanceItem, type MaintenanceStatus } from "@/lib/types";
 
 type LiveStatus = "Connecting" | "Live" | "Error" | "Not loaded";
@@ -20,6 +21,9 @@ interface Ctx {
   status: LiveStatus;
   filter: "active" | "done";
   setFilter: (f: "active" | "done") => void;
+  menu: CurrentMenu | null;
+  menuFailed: boolean;
+  retryMenu: () => void;
   addItem: (title: string, location: string) => Promise<string | null>;
   setItemStatus: (it: MaintenanceItem, status: MaintenanceStatus) => Promise<string | null>;
   addUpdate: (it: MaintenanceItem, text: string) => Promise<string | null>;
@@ -51,6 +55,15 @@ export function HandoversProvider({ displayName, children }: { displayName: stri
   const [status, setStatus] = useState<LiveStatus>("Connecting");
   const [filter, setFilter] = useState<"active" | "done">("active");
   const loadedRef = useRef(false);
+  const [menu, setMenu] = useState<CurrentMenu | null>(null);
+  const [menuFailed, setMenuFailed] = useState(false);
+
+  // The current menu is small and changes rarely: fetch it once per page load, and again only on Retry.
+  const retryMenu = useCallback(() => {
+    setMenuFailed(false);
+    getCurrentMenu(supabase).then(setMenu).catch(() => setMenuFailed(true));
+  }, [supabase]);
+  useEffect(() => { retryMenu(); }, [retryMenu]);
 
   // A handover author picked by hand on this device wins over the signed-in name.
   useEffect(() => {
@@ -151,7 +164,7 @@ export function HandoversProvider({ displayName, children }: { displayName: stri
 
   const value: Ctx = {
     supabase, me, people, author, setAuthor, items, loaded, failed, status,
-    filter, setFilter, addItem, setItemStatus, addUpdate,
+    filter, setFilter, menu, menuFailed, retryMenu, addItem, setItemStatus, addUpdate,
   };
   return <C.Provider value={value}>{children}</C.Provider>;
 }

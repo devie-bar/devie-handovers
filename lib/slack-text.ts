@@ -1,5 +1,6 @@
 import type { HandoverRow, MaintenanceItem, SquareSummary } from "@/lib/types";
 import { ROOMS } from "@/lib/types";
+import { SLACK_IDS } from "@/lib/slack-ids";
 import { daysSince, eur, fmtDate, weekday } from "@/lib/format";
 
 // The message is written in a small markdown (**bold**, > quote, [text](url))
@@ -7,6 +8,8 @@ import { daysSince, eur, fmtDate, weekday } from "@/lib/format";
 
 // Multi-line text becomes one bullet per non-empty line; nested bullets are indented four spaces.
 const nonEmpty = (s: string | null | undefined) => String(s || "").split("\n").map((x) => x.trim()).filter(Boolean);
+/** "<@ID>" when the person has a Slack account, otherwise the plain name. */
+export const mention = (name: string) => (SLACK_IDS[name] ? `<@${SLACK_IDS[name]}>` : name);
 const top = (s: string) => `• ${s}`;
 const sub = (s: string) => `    ◦ ${s}`;
 
@@ -29,16 +32,16 @@ export function slackText(h: HandoverRow, openItems: MaintenanceItem[], link: st
     const bk = h.booked?.rooms?.[k];
     const sr = h.square?.rooms?.[k];
     const sales = sr ? ` · ${eur(sr.gross)} (${sr.tables} table${sr.tables === 1 ? "" : "s"})` : "";
-    const head = top(`${name} · ${x.covers || 0} covers${bk && bk.covers > 0 ? ` (${bk.covers} booked)` : ""}${sales}${x.by ? ` · reported by ${x.by}` : ""}`);
+    const head = top(`${name} · ${x.covers || 0} covers${bk && bk.covers > 0 ? ` (${bk.covers} booked)` : ""}${sales}${x.by ? ` · reported by ${mention(x.by)}` : ""}`);
     return [head, ...nonEmpty(x.notes).map(sub)].join("\n");
   };
   const kr = rooms.kitchen;
   const kitchen = kr && (kr.by || nonEmpty(kr.notes).length)
-    ? [top(`KITCHEN${kr.by ? ` · reported by ${kr.by}` : ""}`), ...nonEmpty(kr.notes).map(sub)]
+    ? [top(`KITCHEN${kr.by ? ` · reported by ${mention(kr.by)}` : ""}`), ...nonEmpty(kr.notes).map(sub)]
     : [];
   const general = nonEmpty(h.notes);
   const sections: string[] = [
-    `**Handover ${fmtDate(h.service_date)} (${weekday(h.service_date)})**${h.author ? `\nby ${h.author}` : ""}`,
+    `**Handover ${fmtDate(h.service_date)} (${weekday(h.service_date)})**${h.author ? `\nby ${mention(h.author)}` : ""}`,
     // ALL DAY, each room and the kitchen are bullets of one list, a blank line between them.
     [
       [top(`ALL DAY - ${h.total_covers ?? 0} covers${h.square ? ` · ${eur(h.square.totals.gross)}` : ""}`), ...general.map(sub)].join("\n"),
@@ -71,10 +74,13 @@ export function slackText(h: HandoverRow, openItems: MaintenanceItem[], link: st
 /** **bold** to *bold*, [text](url) to <url|text>, quotes kept, "- " bullets to "• ", & < > escaped. */
 export function toMrkdwn(s: string): string {
   if (!s) return s;
-  let t = s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  // User mentions (<@U123>) must survive the escaping below.
+  const mentions: string[] = [];
+  let t = s.replace(/<@[UW][A-Z0-9]+>/g, (m) => `\u0000${mentions.push(m) - 1}\u0000`);
+  t = t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   t = t.replace(/^&gt; /gm, "> ");
   t = t.replace(/\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)/g, "<$2|$1>");
   t = t.replace(/\*\*([^*\n]+?)\*\*/g, "*$1*");
   t = t.replace(/^- /gm, "• ");
-  return t;
+  return t.replace(/\u0000(\d+)\u0000/g, (_m, i) => mentions[Number(i)]);
 }

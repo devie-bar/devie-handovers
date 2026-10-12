@@ -309,61 +309,64 @@ export function TonightView() {
           <button type="button" className="ho-btn ho-sm ho-pull" disabled={sqBusy} onClick={pullSquare}>Pull tonight&apos;s sales from Square</button>
         </div>
 
-        <div className="ho-night">
-          <div><span className="ho-display ho-num">{total}</span><span className="ho-label">Total covers</span></div>
-          <div><span className="ho-display ho-num">{booked ? booked.all?.covers ?? 0 : "None"}</span><span className="ho-label" title="Booked in SevenRooms">Booked<span className="ho-lx"> in SevenRooms</span></span></div>
-          {sq && (
-            <>
-              <div><span className="ho-display ho-num">{eur(sq.totals.net)}</span><span className="ho-label">Net sales</span></div>
-              <div><span className="ho-display ho-num">{eur(sq.totals.gross)}</span><span className="ho-label">Gross</span></div>
-              <div><span className="ho-display ho-num">{eur(sq.totals.tips)}</span><span className="ho-label">Tips</span></div>
-              <div><span className="ho-display ho-num">{sq.totals.orders}</span><span className="ho-label">Orders</span></div>
-            </>
-          )}
-        </div>
-
-        <div className="ho-sq">
-          <span className="ho-caption" aria-live="polite">{sqSub}</span>
-          <div className="ho-sq-out">
+        <section className="ho-module ho-mstack" aria-labelledby="ho-tonight-h">
+          <div className="ho-secthead"><h2 className="ho-sectlabel" id="ho-tonight-h">Tonight</h2></div>
+          <div className="ho-night">
+            <div><span className="ho-display ho-num">{total}</span><span className="ho-label">Total covers</span></div>
+            <div><span className="ho-display ho-num">{booked ? booked.all?.covers ?? 0 : "None"}</span><span className="ho-label" title="Booked in SevenRooms">Booked<span className="ho-lx"> in SevenRooms</span></span></div>
             {sq && (
               <>
-                <p className="ho-caption" style={{ margin: 0 }}>
-                  Discounts {eur(sq.totals.discount)} · Tax {eur(sq.totals.tax)} · Card {eur(sq.totals.card)} · Cash {eur(sq.totals.cash)}
-                  {sq.totals.otherTender ? " · Other " + eur(sq.totals.otherTender) : ""}
-                </p>
-                <table className="ho-sqt">
-                  <thead><tr><th>Room</th><th className="ho-n">Tables</th><th className="ho-n">Checks</th><th className="ho-n">Gross</th><th className="ho-n">Tips</th></tr></thead>
-                  <tbody>
-                    {(["summer", "spring", "autumn", "other"] as const).filter((k) => sq.rooms[k]?.orders).map((k) => (
-                      <tr key={k}>
-                        <td>{cap(k)}</td><td className="ho-n">{sq.rooms[k].tables}</td><td className="ho-n">{sq.rooms[k].orders}</td>
-                        <td className="ho-n">{eur(sq.rooms[k].gross)}</td><td className="ho-n">{eur(sq.rooms[k].tips)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <table className="ho-sqt">
-                  <thead><tr><th>Category</th><th className="ho-n">Items</th><th className="ho-n">Gross</th></tr></thead>
-                  <tbody>{sq.categories.map((c) => <tr key={c.name}><td>{c.name}</td><td className="ho-n">{c.qty}</td><td className="ho-n">{eur(c.gross)}</td></tr>)}</tbody>
-                </table>
-                <table className="ho-sqt">
-                  <thead><tr><th>Item</th><th className="ho-n">Qty</th><th className="ho-n">Gross</th></tr></thead>
-                  <tbody>{[...sq.top].sort((x, y) => y.qty - x.qty).map((i) => <tr key={i.name}><td>{i.name}</td><td className="ho-n">{i.qty}</td><td className="ho-n">{eur(i.gross)}</td></tr>)}</tbody>
-                </table>
+                <div><span className="ho-display ho-num">{eur(sq.totals.net)}</span><span className="ho-label">Net sales</span></div>
+                <div><span className="ho-display ho-num">{eur(sq.totals.gross)}</span><span className="ho-label">Gross</span></div>
+                <div><span className="ho-display ho-num">{eur(sq.totals.tips)}</span><span className="ho-label">Tips</span></div>
+                <div><span className="ho-display ho-num">{sq.totals.orders}</span><span className="ho-label">Orders</span></div>
               </>
             )}
           </div>
-        </div>
 
-        <div>
-          <div className="ho-mtop">
-            <span className="ho-label">Rooms</span>
+          <div className="ho-sq">
+            <span className="ho-caption" aria-live="polite">{sqSub}</span>
+            <div className="ho-sq-out">
+              {sq && (
+                <>
+                  <p className="ho-caption" style={{ margin: 0 }}>
+                    Discounts {eur(sq.totals.discount)} · Tax {eur(sq.totals.tax)} · Card {eur(sq.totals.card)} · Cash {eur(sq.totals.cash)}
+                    {sq.totals.otherTender ? " · Other " + eur(sq.totals.otherTender) : ""}
+                  </p>
+                  <table className="ho-sqt">
+                    <thead><tr><th>Room</th><th className="ho-n">Tables</th><th className="ho-n">Checks</th><th className="ho-n">Gross</th><th className="ho-n">Tips</th></tr></thead>
+                    <tbody>
+                      {(["summer", "spring", "autumn", "other"] as const).filter((k) => sq.rooms[k]?.orders).map((k) => (
+                        <tr key={k}>
+                          <td>{cap(k)}</td><td className="ho-n">{sq.rooms[k].tables}</td><td className="ho-n">{sq.rooms[k].orders}</td>
+                          <td className="ho-n">{eur(sq.rooms[k].gross)}</td><td className="ho-n">{eur(sq.rooms[k].tips)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <table className="ho-sqt">
+                    <thead><tr><th>Category</th><th className="ho-n">Items</th><th className="ho-n">Gross</th></tr></thead>
+                    <tbody>{sq.categories.map((c) => <tr key={c.name}><td>{c.name}</td><td className="ho-n">{c.qty}</td><td className="ho-n">{eur(c.gross)}</td></tr>)}</tbody>
+                  </table>
+                  <table className="ho-sqt">
+                    <thead><tr><th>Item</th><th className="ho-n">Qty</th><th className="ho-n">Gross</th></tr></thead>
+                    <tbody>{[...sq.top].sort((x, y) => y.qty - x.qty).map((i) => <tr key={i.name}><td>{i.name}</td><td className="ho-n">{i.qty}</td><td className="ho-n">{eur(i.gross)}</td></tr>)}</tbody>
+                  </table>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="ho-module" aria-labelledby="ho-rooms-h">
+          <div className="ho-secthead">
+            <h2 className="ho-sectlabel" id="ho-rooms-h">Rooms</h2>
             <span className="ho-caption">
               {(openRooms.length ? `${submittedCount} of ${openRooms.length} open room${openRooms.length > 1 ? "s" : ""} submitted` : "All rooms closed") +
                 (booked ? ` · ${booked.all?.covers ?? 0} covers booked in SevenRooms` : "")}
             </span>
           </div>
-          <div className="ho-rooms" style={{ marginTop: 12 }}>
+          <div className="ho-rooms">
             {ROOMS.map((name) => {
               const k = name.toLowerCase() as RoomKey;
               const s = view(k);
@@ -436,11 +439,11 @@ export function TonightView() {
               );
             })}
           </div>
-        </div>
+        </section>
 
-        <form className="ho-stack" onSubmit={publish} autoComplete="off">
-          <div className="ho-mtop">
-            <h2>Handover</h2>
+        <form className="ho-module ho-mstack" onSubmit={publish} autoComplete="off">
+          <div className="ho-secthead">
+            <h2 className="ho-sectlabel">Handover</h2>
             <span className="ho-caption">
               {published
                 ? "Already published. Publishing again reposts to Slack."
@@ -494,11 +497,9 @@ export function TonightView() {
           </div>
         </form>
 
-        <section aria-labelledby="ho-maint-h">
-          <h2 id="ho-maint-h">Maintenance</h2>
-          <div style={{ marginTop: 12 }}>
-            <MaintenancePanel />
-          </div>
+        <section className="ho-module ho-mstack" aria-labelledby="ho-maint-h">
+          <div className="ho-secthead"><h2 className="ho-sectlabel" id="ho-maint-h">Maintenance</h2></div>
+          <MaintenancePanel />
         </section>
       </div>
     </section>

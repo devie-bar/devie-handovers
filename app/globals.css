@@ -147,14 +147,16 @@ body {
 @media (min-width:600px){
   :where(.ho-app) .ho-grid2{grid-template-columns:1fr 1fr}
 }
-:where(.ho-app) .ho-rooms{display:grid;gap:24px}
-:where(.ho-app) .ho-room{display:grid;gap:0;padding-top:12px;border-top:1px solid var(--dv-line)}
+:where(.ho-app) .ho-rooms{display:grid;gap:16px}
+:where(.ho-app) .ho-room{display:grid;gap:0;padding:8px 16px;background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-module)}
 :where(.ho-app) .ho-room .ho-rh{display:flex;align-items:center;justify-content:space-between;gap:8px}
 :where(.ho-app) .ho-room .ho-rh{cursor:pointer;min-height:var(--ctl)}
 :where(.ho-app) .ho-room .ho-rh h3{font-weight:400;flex:1;min-width:0}
 :where(.ho-app) .ho-room .ho-rtoggle{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;width:100%;min-height:var(--ctl);padding:4px 0;background:none;border:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
 :where(.ho-app) .ho-room .ho-rname{font:inherit;font-weight:400}
-:where(.ho-app) .ho-room .ho-rsum{color:var(--dv-ink-soft)}
+/* Room title: PP Editorial Regular (400) at Display S 21px, a weight chosen on purpose (DESIGN.md 2.3) so the
+   module title reads against the Ultralight labels. The summary under it is Epilogue Body S, not the display face. */
+:where(.ho-app) .ho-room .ho-rsum{color:var(--dv-ink-soft);font-family:var(--dv-ui);font-weight:400;letter-spacing:0}
 :where(.ho-app) .ho-room .ho-chev{flex:none;color:var(--dv-ink-soft);transition:transform .15s ease-out}
 :where(.ho-app) .ho-room.ho-open .ho-chev{transform:rotate(180deg)}
 :where(.ho-app) .ho-room .ho-rbody{display:grid;grid-template-rows:0fr;visibility:hidden;transition:grid-template-rows .15s ease-out,visibility 0s linear .15s}
@@ -300,7 +302,7 @@ body {
 :where(.ho-app) .ho-author{display:flex;align-items:baseline;gap:8px;margin-left:auto}
 :where(.ho-app) .ho-author select{height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 10px;min-width:160px}
 @media (max-width:599.98px){:where(.ho-app) .ho-author{width:100%;margin-left:0}:where(.ho-app) .ho-author select{flex:1}}
-:where(.ho-app) .ho-night{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px 24px;padding-top:16px;border-top:1px solid var(--dv-line)}
+:where(.ho-app) .ho-night{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px 24px}
 :where(.ho-app) .ho-night > div{display:grid;gap:2px;flex:0 0 auto}
 /* Weight chosen on purpose (DESIGN.md 2.3): the Ultralight default is too faint for the night's
    headline figures, so they use PP Editorial Regular (400) at Display L (32 / 1.10). Headings stay Ultralight. */
@@ -317,8 +319,19 @@ body {
 :where(.ho-app) .ho-mchips{display:grid;gap:8px}
 :where(.ho-app) .ho-mgroup{display:flex;flex-wrap:wrap;gap:8px}
 :where(.ho-app) .ho-mgroup + .ho-mgroup{border-top:1px solid var(--dv-line);padding-top:8px}
-:where(.ho-app) .ho-mchip{min-height:var(--ctl);padding:0 12px;display:inline-flex;align-items:center;gap:6px;font-size:13.5px;line-height:1.5;background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-chip);color:inherit;cursor:pointer;transition:background .15s ease-out,border-color .15s ease-out}
+:where(.ho-app) .ho-mchip{min-height:var(--ctl);padding:0 12px;display:inline-flex;align-items:center;gap:6px;font-size:12px;line-height:1.5;letter-spacing:.06em;text-transform:uppercase;background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-chip);color:var(--dv-green-2);cursor:pointer;transition:background .15s ease-out,border-color .15s ease-out}
 :where(.ho-app) .ho-mchip.ho-on.ho-m-warn{background:var(--dv-warn-tint);border-color:var(--dv-warn-line);color:var(--dv-warn)}
 :where(.ho-app) .ho-mchip.ho-on.ho-m-danger{background:var(--dv-danger-tint);border-color:var(--dv-danger-line);color:var(--dv-danger)}
 :where(.ho-app) .ho-mfail{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 @media (prefers-reduced-motion:reduce){:where(.ho-app) .ho-mchip{transition:none}}
+
+/* Sections as windows, ported from the Liquid Library (devie-archive/components/Archive.jsx):
+   .dv-module (white, 1px line, module radius 12, padding 20/22) and the .dv-sect h4 section
+   header (11px, .18em, uppercase, copper-deep, hairline under). No shadow on static modules. */
+:where(.ho-app) .ho-module{background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-module);padding:20px 22px;min-width:0}
+:where(.ho-app) .ho-mstack{display:grid;gap:24px}
+:where(.ho-app) .ho-mstack > .ho-secthead + *{margin-top:-8px}
+:where(.ho-app) .ho-secthead{display:flex;align-items:baseline;justify-content:space-between;gap:4px 16px;flex-wrap:wrap;border-bottom:1px solid var(--dv-line);padding-bottom:6px;margin:0 0 16px}
+:where(.ho-app) .ho-mstack > .ho-secthead{margin-bottom:0}
+:where(.ho-app) h2.ho-sectlabel{font-family:var(--dv-ui);font-size:11px;line-height:1.4;letter-spacing:.18em;text-transform:uppercase;color:var(--dv-copper-deep);font-weight:700;margin:0}
+@media (max-width:599.98px){:where(.ho-app) .ho-module{padding:16px}:where(.ho-app) .ho-room{padding:4px 12px}}

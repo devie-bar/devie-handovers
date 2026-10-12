@@ -63,6 +63,7 @@ export function LogView() {
                     <span className="ho-ldate">{fmtDate(h.service_date)}</span>
                     <span className="ho-caption">{longDate(h.service_date)}, handover by {h.author}</span>
                     <span className="ho-cov ho-num"><b>{h.total_covers ?? 0}</b> covers</span>
+                    {h.square ? <span className="ho-cov ho-num"><b>{eur(h.square.totals.gross)}</b></span> : null}
                     <svg className="ho-chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
                       <path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>

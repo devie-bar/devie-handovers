@@ -365,12 +365,14 @@ body {
 :where(.ho-app) .ho-ldate{font-family:var(--dv-display);font-size:26px;font-weight:200;line-height:1.15;letter-spacing:-.05em}
 :where(.ho-app) .ho-lbtn .ho-caption{font-family:var(--dv-ui);letter-spacing:0;font-weight:400}
 :where(.ho-app) .ho-lbtn .ho-cov{margin-left:auto;font-family:var(--dv-ui);letter-spacing:0;font-weight:400;font-size:13.5px;color:var(--dv-ink-soft)}
+:where(.ho-app) .ho-lbtn .ho-cov + .ho-cov{margin-left:0}
 :where(.ho-app) .ho-lbtn .ho-cov b{color:var(--dv-ink);font-weight:600;font-size:17px}
 :where(.ho-app) .ho-lbody{display:grid;grid-template-rows:0fr;visibility:hidden;transition:grid-template-rows .15s ease-out,visibility 0s linear .15s}
 :where(.ho-app) .ho-logmod.ho-open .ho-lbody{grid-template-rows:1fr;visibility:visible;transition:grid-template-rows .15s ease-out,visibility 0s}
-:where(.ho-app) .ho-lin{overflow:hidden;min-height:0;display:grid;gap:16px;border-top:1px solid var(--dv-line);padding:16px 3px 12px}
+:where(.ho-app) .ho-lin{overflow:hidden;min-height:0;display:grid;gap:16px;padding:0 3px}
+/* Padding and the rule only when open: padding would otherwise hold a collapsed module open. */
+:where(.ho-app) .ho-logmod.ho-open .ho-lin{border-top:1px solid var(--dv-line);padding:16px 3px 12px}
 :where(.ho-app) .ho-logmod .ho-lin:empty{display:none}
-:where(.ho-app) .ho-logmod:not(.ho-open) .ho-lin{border-top-color:transparent}
 :where(.ho-app) .ho-rbox{border:1px solid var(--dv-line);border-radius:var(--dv-radius-inner);padding:12px 16px;background:var(--dv-surface)}
 :where(.ho-app) .ho-ho .ho-kv dt.ho-label{font-size:11px;letter-spacing:.18em;font-weight:700;color:var(--dv-copper-deep)}
 @media (max-width:599.98px){:where(.ho-app) .ho-logmod{padding:4px 16px}}

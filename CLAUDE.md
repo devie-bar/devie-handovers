@@ -49,6 +49,18 @@ Database project, same login and middleware as the dashboard).
   inside `:where(.ho-app)`, so it adds no specificity and Tailwind utilities
   (EstateNav, SignOutButton) still win. Tailwind token names are the dashboard's.
 
+## Header
+
+One sticky green strip (`components/AppHeader.tsx`): wordmark and estate switcher,
+then the sections (`components/PrimaryNav.tsx`) justified across the bar, then Live
+and Sign out (`components/HeaderWho.tsx`). `PrimaryNav` is a port of the Liquid
+Library's `TopNav` (devie-archive `components/Archive.jsx`, "Top navigation", and its
+`.dv-top` styles): same measured collapse into a Menu button, same tab and panel
+styles, under `.ho-top` in `app/globals.css`. Keep the two in step. The switcher
+markup is `EstateNav`'s, moved into the strip; `components/EstateNav.tsx` stays
+byte-identical to the other repos but is no longer rendered here. The Library's
+hover sub-menus and EN/FR toggle are not carried over (Handovers has neither).
+
 ## Estate list
 
 `lib/estate.ts` is identical in every De Vie repo. It gained a Handovers entry

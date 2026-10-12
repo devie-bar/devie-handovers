@@ -79,22 +79,56 @@ body {
 :where(.ho-app) .ho-body-s{font-size:13.5px;line-height:1.5}
 :where(.ho-app) .ho-num{font-variant-numeric:tabular-nums}
 :where(.ho-app) a{color:inherit}
-:where(.ho-app) .ho-hdr{position:sticky;top:0;z-index:20;background:var(--dv-paper);border-bottom:1px solid var(--dv-line)}
-:where(.ho-app) .ho-hdr .ho-in{max-width:1280px;margin:0 auto;padding:0 var(--gutter);display:flex;align-items:center;gap:24px;min-width:0}
-:where(.ho-app) nav.ho-primary{display:flex;justify-content:space-between;flex:1;min-width:0}
-:where(.ho-app) nav.ho-primary a{font-family:var(--dv-display);font-weight:400;letter-spacing:-.05em;text-transform:uppercase;font-size:21px;line-height:1;text-decoration:none;color:var(--dv-ink-soft);height:var(--ctl);display:flex;align-items:center;padding:0 4px;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
-:where(.ho-app) nav.ho-primary a[aria-current]{color:var(--dv-ink);border-bottom-color:var(--dv-green)}
-:where(.ho-app) nav.ho-primary a .ho-n{font-family:var(--dv-ui);font-size:11px;font-weight:600;letter-spacing:0;color:var(--dv-danger);margin-left:6px;vertical-align:2px}
-:where(.ho-app) .ho-who{flex:none;display:flex;align-items:center;gap:8px}
-:where(.ho-app) .ho-who select{height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 10px}
-:where(.ho-app) .ho-who .ho-st{font-size:12px;color:var(--dv-ink-soft);white-space:nowrap}
-@media (max-width:599.98px){
-  :where(.ho-app) .ho-hdr .ho-in{flex-wrap:wrap;gap:0}
-  :where(.ho-app) nav.ho-primary{width:100%;order:1;flex:none}
-  :where(.ho-app) .ho-who{width:100%;order:2;padding:8px 0 12px;justify-content:space-between}
-  :where(.ho-app) .ho-who select{flex:1}
-  :where(.ho-app) nav.ho-primary a{font-size:18px}
-}
+/* The green strip. Matches the Library's .dv-top (devie-archive/components/Archive.jsx): three columns,
+   brand left, sections justified in the middle, account controls right; collapsed to a Menu button. */
+:where(.ho-app) .ho-top{position:sticky;top:0;z-index:30;background:var(--dv-green);color:#fff}
+:where(.ho-app) .ho-top-in{max-width:1280px;margin:0 auto;padding:16px var(--gutter);display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:28px}
+:where(.ho-app) .ho-top-in.is-compact{grid-template-columns:1fr auto;gap:12px}
+:where(.ho-app) .ho-top-in.is-compact > .ho-who{display:none}
+:where(.ho-app) .ho-top-in.is-compact > .ho-navbtn{justify-self:end}
+:where(.ho-app) .ho-top-in > :first-child{justify-self:start}
+:where(.ho-app) .ho-top-in > .ho-toptabs{justify-self:stretch;justify-content:space-between;min-width:0}
+:where(.ho-app) .ho-top-in > .ho-who{justify-self:end}
+:where(.ho-app) .ho-brandrow{display:flex;align-items:center;gap:12px;min-width:0}
+:where(.ho-app) .ho-brand{display:block;flex:none;line-height:0}
+:where(.ho-app) .ho-brand:hover{opacity:.72}
+:where(.ho-app) .ho-logo{height:36px;width:auto;display:block}
+:where(.ho-app) .ho-switch{display:flex;align-items:center;gap:6px;min-height:var(--ctl);padding:0 8px;background:none;border:0;color:#fff;font-size:14px;font-weight:500;white-space:nowrap}
+:where(.ho-app) .ho-switch-caret{color:rgba(255,255,255,.7)}
+:where(.ho-app) .ho-top :focus-visible{outline-color:var(--dv-copper-soft)}
+:where(.ho-app) .ho-toptabs{display:flex;gap:2px;flex-wrap:wrap}
+:where(.ho-app) .ho-tab{display:inline-flex;align-items:center;min-height:var(--ctl);background:none;border:0;border-bottom:2px solid transparent;font-family:var(--dv-display);font-size:19px;font-weight:200;letter-spacing:-.05em;text-transform:uppercase;text-decoration:none;line-height:1.1;color:var(--dv-copper-soft);padding:9px 11px;cursor:pointer}
+:where(.ho-app) .ho-tab.on{color:#fff;border-bottom-color:var(--dv-copper)}
+:where(.ho-app) .ho-tab:hover{color:#fff}
+:where(.ho-app) .ho-tabn,:where(.ho-app) .ho-navpanel-item .ho-tabn{font-family:var(--dv-ui);font-size:11px;font-weight:600;letter-spacing:0;color:var(--dv-copper-soft);margin-left:6px;vertical-align:2px}
+:where(.ho-app) .ho-navpanel-item .ho-tabn{color:var(--dv-copper-deep)}
+@media (max-width:839px){:where(.ho-app) .ho-tab{padding:8px 14px;min-height:44px}}
+:where(.ho-app) .ho-navmeasure{position:absolute;left:0;right:0;top:0;height:0;overflow:hidden;visibility:hidden;pointer-events:none}
+:where(.ho-app) .ho-navmeasure .ho-toptabs{width:max-content;flex-wrap:nowrap}
+:where(.ho-app) .ho-navbtn{display:flex;align-items:center;justify-content:center;gap:8px;min-width:44px;min-height:44px;padding:9px 12px;background:transparent;border:1px solid var(--dv-copper-soft);border-radius:var(--dv-radius-control);color:#fff}
+:where(.ho-app) .ho-burger{display:block;position:relative;width:22px;height:14px}
+:where(.ho-app) .ho-burger i{position:absolute;left:0;right:0;height:1.5px;background:currentColor;border-radius:1px;transition:transform .28s cubic-bezier(.65,0,.35,1),top .28s cubic-bezier(.65,0,.35,1)}
+:where(.ho-app) .ho-burger i:first-child{top:0}
+:where(.ho-app) .ho-burger i:last-child{top:12.5px}
+:where(.ho-app) .ho-navbtn[aria-expanded="true"] .ho-burger i{top:6.25px}
+:where(.ho-app) .ho-navbtn[aria-expanded="true"] .ho-burger i:first-child{transform:rotate(45deg)}
+:where(.ho-app) .ho-navbtn[aria-expanded="true"] .ho-burger i:last-child{transform:rotate(-45deg)}
+@media (prefers-reduced-motion:reduce){:where(.ho-app) .ho-burger i{transition:none}}
+:where(.ho-app) .ho-navbtn:hover,:where(.ho-app) .ho-navbtn[aria-expanded="true"]{background:rgba(255,255,255,.09)}
+:where(.ho-app) .ho-navpanel{position:absolute;top:100%;left:0;right:0;z-index:60;background:var(--dv-paper);border-bottom:2px solid var(--dv-copper);box-shadow:var(--dv-shadow-overlay);max-height:calc(100dvh - 72px);overflow-y:auto;color:var(--dv-ink)}
+:where(.ho-app) .ho-navpanel-in{max-width:1280px;margin:0 auto;padding:8px var(--gutter) 12px;display:flex;flex-direction:column}
+:where(.ho-app) .ho-navpanel-item{display:flex;align-items:center;width:100%;min-height:44px;padding:6px 12px;background:none;border:0;border-radius:2px;text-align:left;text-decoration:none;font-family:var(--dv-display);font-size:21px;font-weight:200;letter-spacing:-.05em;text-transform:uppercase;line-height:1.2;color:var(--dv-ink-soft)}
+:where(.ho-app) .ho-navpanel-item:hover{background:var(--dv-line);color:var(--dv-ink)}
+:where(.ho-app) .ho-navpanel-item.on{color:var(--dv-copper-deep)}
+:where(.ho-app) .ho-navpanel a:focus-visible,:where(.ho-app) .ho-navpanel button:focus-visible{outline:2px solid var(--dv-green-2);outline-offset:-2px}
+:where(.ho-app) .ho-navpanel-acct{margin-top:10px;padding-top:12px;border-top:1px solid var(--dv-line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+:where(.ho-app) .ho-navpanel-acct .ho-st{color:var(--dv-ink-soft)}
+:where(.ho-app) .ho-navpanel-acct .ho-ctl{color:var(--dv-ink);border-color:var(--dv-line)}
+:where(.ho-app) .ho-navpanel-acct .ho-ctl:hover{background:var(--dv-line)}
+:where(.ho-app) .ho-who{display:flex;align-items:center;gap:12px}
+:where(.ho-app) .ho-st{font-size:12px;color:var(--dv-green-soft);white-space:nowrap}
+:where(.ho-app) .ho-ctl{min-height:var(--ctl);background:transparent;border:1px solid var(--dv-copper-soft);color:#fff;font-size:12.5px;letter-spacing:.03em;padding:0 14px;border-radius:var(--dv-radius-control);cursor:pointer;text-transform:capitalize}
+:where(.ho-app) .ho-ctl:hover{background:rgba(255,255,255,.09)}
 :where(.ho-app) .ho-wrap{max-width:1280px;margin:0 auto;padding:32px var(--gutter) 96px}
 @media (min-width:840px){
   :where(.ho-app) .ho-wrap{padding-top:48px}

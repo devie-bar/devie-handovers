@@ -1,9 +1,7 @@
 import { redirect } from "next/navigation";
 import { getHandoversUser } from "@/lib/auth";
 import { SignOutButton } from "@/components/SignOutButton";
-import { PrimaryNav } from "@/components/PrimaryNav";
-import { EstateNav } from "@/components/EstateNav";
-import { HeaderWho } from "@/components/HeaderWho";
+import { AppHeader } from "@/components/AppHeader";
 import { HandoversProvider } from "@/components/HandoversProvider";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -29,16 +27,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      {/* DESIGN.md 3.7: identical estate strip at the top of every app */}
-      <EstateNav current="handovers" />
       <div className="ho-app">
         <HandoversProvider displayName={user.displayName}>
-          <header className="ho-hdr">
-            <div className="ho-in">
-              <PrimaryNav />
-              <HeaderWho />
-            </div>
-          </header>
+          {/* DESIGN.md 3.1, 3.7, 3.8: one sticky green strip carrying wordmark, estate switcher, sections and account */}
+          <AppHeader current="handovers" />
           <div className="ho-wrap">
             <main>{children}</main>
           </div>

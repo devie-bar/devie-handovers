@@ -57,6 +57,13 @@ function seedFromHandover(prev: HandoverRow): DraftRow {
   };
 }
 
+// "Saturday 11 October" for a yyyy-mm-dd service date.
+function dateTitle(d: string): string {
+  const [y, m, day] = d.split("-").map(Number);
+  if (!y || !m || !day) return d;
+  return new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" }).format(new Date(Date.UTC(y, m - 1, day)));
+}
+
 type Edit = { by?: string; covers?: string; notes?: string };
 
 export function TonightView() {
@@ -75,6 +82,7 @@ export function TonightView() {
   const [target, setTarget] = useState<"channel" | "test">("channel");
   const [flagTitle, setFlagTitle] = useState("");
   const [flagLoc, setFlagLoc] = useState("Bar");
+  const [pickDate, setPickDate] = useState(false);
   const [openOverride, setOpenOverride] = useState<Partial<Record<RoomKey, boolean>>>({});
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
@@ -265,11 +273,6 @@ export function TonightView() {
 
   return (
     <section>
-      <h1>Tonight&apos;s handover</h1>
-      <p className="ho-lede">
-        Each room writes its own part from wherever it is. The closing manager adds the shared notes, checks it over and publishes it to Slack in one go.
-      </p>
-
       {loadErr && (
         <div className="ho-err" role="alert">
           <span>Could not open tonight&apos;s draft: {loadErr}.</span>
@@ -277,19 +280,33 @@ export function TonightView() {
         </div>
       )}
 
-      <div className="ho-stack" style={{ marginTop: 32 }}>
-        <div className="ho-grid2">
-          <div className="ho-f">
-            <label htmlFor="f-date">Service date</label>
-            <input type="date" id="f-date" required value={date} onChange={(e) => e.target.value && setDate(e.target.value)} />
-          </div>
-          <div className="ho-total">
-            <span className="ho-label">Total covers</span>
-            <span className="ho-display ho-num">{total}</span>
+      <div className="ho-stack">
+        <div className="ho-head">
+          <h1>{dateTitle(date)}</h1>
+          <div className="ho-headr">
             <span className="ho-caption">
               {published && draft.published_at ? `Published by ${draft.published_by} at ${timeHM(draft.published_at)}` : "Draft"}
             </span>
+            {pickDate ? (
+              <input type="date" id="f-date" aria-label="Service date" required autoFocus value={date}
+                onChange={(e) => e.target.value && setDate(e.target.value)} onBlur={() => setPickDate(false)} />
+            ) : (
+              <button type="button" className="ho-btn ho-sm" onClick={() => setPickDate(true)}>Change date</button>
+            )}
           </div>
+        </div>
+
+        <div className="ho-sqk ho-night">
+          <div><span className="ho-display ho-num">{total}</span><span className="ho-label">Total covers</span></div>
+          <div><span className="ho-display ho-num">{booked ? booked.all?.covers ?? 0 : "None"}</span><span className="ho-label">Booked in SevenRooms</span></div>
+          {sq && (
+            <>
+              <div><span className="ho-display ho-num">{eur(sq.totals.net)}</span><span className="ho-label">Net sales</span></div>
+              <div><span className="ho-display ho-num">{eur(sq.totals.gross)}</span><span className="ho-label">Gross</span></div>
+              <div><span className="ho-display ho-num">{eur(sq.totals.tips)}</span><span className="ho-label">Tips</span></div>
+              <div><span className="ho-display ho-num">{sq.totals.orders}</span><span className="ho-label">Orders</span></div>
+            </>
+          )}
         </div>
 
         <div className="ho-sq">
@@ -297,14 +314,6 @@ export function TonightView() {
           <div className="ho-sq-out">
             {sq && (
               <>
-                <div className="ho-sqk">
-                  <div><span className="ho-display ho-num">{eur(sq.totals.net)}</span><span className="ho-label">Net sales</span></div>
-                  <div><span className="ho-display ho-num">{eur(sq.totals.gross)}</span><span className="ho-label">Gross sales</span></div>
-                  <div><span className="ho-display ho-num">{eur(sq.totals.tips)}</span><span className="ho-label">Tips</span></div>
-                  <div><span className="ho-display ho-num">{sq.totals.orders}</span><span className="ho-label">Orders</span></div>
-                  <div><span className="ho-display ho-num">{eur(sq.totals.avg)}</span><span className="ho-label">Average order</span></div>
-                  <div><span className="ho-display ho-num">{sq.totals.items}</span><span className="ho-label">Items sold</span></div>
-                </div>
                 <p className="ho-caption" style={{ margin: 0 }}>
                   Discounts {eur(sq.totals.discount)} · Tax {eur(sq.totals.tax)} · Card {eur(sq.totals.card)} · Cash {eur(sq.totals.cash)}
                   {sq.totals.otherTender ? " · Other " + eur(sq.totals.otherTender) : ""}

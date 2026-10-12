@@ -255,3 +255,8 @@ body {
   :where(.ho-app) .ho-room .ho-chev,:where(.ho-app) .ho-room .ho-rbody{transition:none}
   :where(.ho-app) .ho-skel i::after,:where(.ho-app) .ho-swap-in-r,:where(.ho-app) .ho-swap-in-l{animation:none}
 }
+
+:where(.ho-app) .ho-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px 16px;flex-wrap:wrap}
+:where(.ho-app) .ho-headr{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+:where(.ho-app) .ho-headr input[type=date]{min-height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 12px}
+:where(.ho-app) .ho-night{padding-top:16px;border-top:1px solid var(--dv-line)}

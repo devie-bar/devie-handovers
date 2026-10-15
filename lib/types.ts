@@ -1,9 +1,9 @@
 export const ROOMS = ["Summer", "Spring", "Autumn"] as const;
 export type RoomKey = "summer" | "spring" | "autumn";
 export const ROOM_KEYS: RoomKey[] = ["summer", "spring", "autumn"];
-// The kitchen reports like a room (who, notes, when) but is not one: it has no covers, no closed state, and is
+// The kitchen and prep report like a room (who, notes, when) but is not one: it has no covers, no closed state, and is
 // kept out of ROOM_KEYS so totals, booked covers and the Square room table never see it.
-export type SectionKey = RoomKey | "kitchen";
+export type SectionKey = RoomKey | "kitchen" | "prep";
 
 export interface RoomPart {
   by?: string;

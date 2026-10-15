@@ -35,15 +35,18 @@ export function slackText(h: HandoverRow, openItems: MaintenanceItem[], link: st
     const head = top(`${name} · ${x.covers || 0} covers${bk && bk.covers > 0 ? ` (${bk.covers} booked)` : ""}${sales}${x.by ? ` · reported by ${mention(x.by, ids)}` : ""}`);
     return [head, ...nonEmpty(x.notes).map(sub)].join("\n");
   };
-  const kr = rooms.kitchen;
-  const kitchen = kr && (kr.by || nonEmpty(kr.notes).length)
-    ? [top(`KITCHEN${kr.by ? ` · reported by ${mention(kr.by, ids)}` : ""}`), ...nonEmpty(kr.notes).map(sub)]
-    : [];
+  const unit = (title: string, u?: { by?: string; notes?: string }) =>
+    u && (u.by || nonEmpty(u.notes).length)
+      ? [top(`${title}${u.by ? ` · reported by ${mention(u.by, ids)}` : ""}`), ...nonEmpty(u.notes).map(sub)]
+      : [];
+  const kitchen = unit("KITCHEN", rooms.kitchen);
+  const prep = unit("PREP / MEP", rooms.prep);
   const general = nonEmpty(h.notes);
   const sections: string[] = [
     `**Handover ${fmtDate(h.service_date)} (${weekday(h.service_date)})**${h.author ? `\nby ${mention(h.author, ids)}` : ""}`,
-    // ALL DAY, each room and the kitchen are bullets of one list, a blank line between them.
+    // Prep / MEP, ALL DAY, each room and the kitchen are bullets of one list, a blank line between them.
     [
+      ...(prep.length ? [prep.join("\n")] : []),
       [top(`ALL DAY - ${h.total_covers ?? 0} covers${h.square ? ` · ${eur(h.square.totals.gross)}` : ""}`), ...general.map(sub)].join("\n"),
       ...ROOMS.map(room),
       ...(kitchen.length ? [kitchen.join("\n")] : []),

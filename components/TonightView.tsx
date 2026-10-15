@@ -39,6 +39,7 @@ function normalise(row: DraftRow): DraftRow {
     rooms: {
       summer: { ...b.rooms.summer, ...row.rooms?.summer }, spring: { ...b.rooms.spring, ...row.rooms?.spring }, autumn: { ...b.rooms.autumn, ...row.rooms?.autumn },
       ...(row.rooms?.kitchen ? { kitchen: row.rooms.kitchen } : {}),
+      ...(row.rooms?.prep ? { prep: row.rooms.prep } : {}),
     },
     shared: { ...BLANK_SHARED, ...row.shared },
   };
@@ -49,6 +50,7 @@ function seedFromHandover(prev: HandoverRow): DraftRow {
   const d = blankDraft(prev.service_date);
   const rooms = {} as Record<SectionKey, RoomPart>;
   if (prev.rooms?.kitchen) rooms.kitchen = { by: prev.rooms.kitchen.by || "", notes: prev.rooms.kitchen.notes || "", submittedAt: prev.posted_at };
+  if (prev.rooms?.prep) rooms.prep = { by: prev.rooms.prep.by || "", notes: prev.rooms.prep.notes || "", submittedAt: prev.posted_at };
   ROOM_KEYS.forEach((k) => {
     const x: HandoverRoom = prev.rooms?.[k] || {};
     rooms[k] = { by: prev.author || "", covers: x.covers || 0, notes: x.notes || "", closed: x.open === false, submittedAt: prev.posted_at };
@@ -185,22 +187,22 @@ export function TonightView() {
     setDraft((d) => ({ ...d, rooms: { ...d.rooms, [k]: { ...d.rooms[k], ...part } } }));
   }
 
-  // The kitchen reports like a room, without covers or a closed state.
-  const kr = draft.rooms.kitchen || {};
-  const kitchen = {
-    r: kr,
-    by: edits.kitchen?.by ?? (kr.by || ""),
-    notes: edits.kitchen?.notes ?? (kr.notes || ""),
-    sent: !!kr.submittedAt,
+  // The kitchen and prep report like a room, without covers or a closed state.
+  type Unit = "kitchen" | "prep";
+  const unitState = (k: Unit) => {
+    const r = draft.rooms[k] || {};
+    return { r, by: edits[k]?.by ?? (r.by || ""), notes: edits[k]?.notes ?? (r.notes || ""), sent: !!r.submittedAt };
   };
-  const kitchenOpen = openOverride.kitchen ?? !kitchen.sent;
-  async function submitKitchen() {
-    if (!kitchen.by) { toast("Pick who is reporting for kitchen before submitting."); document.getElementById("by-kitchen")?.focus(); return; }
+  const kitchen = unitState("kitchen");
+  const prep = unitState("prep");
+  async function submitUnit(k: Unit, title: string) {
+    const u = unitState(k);
+    if (!u.by) { toast(`Pick who is reporting for ${title.toLowerCase()} before submitting.`); document.getElementById(`by-${k}`)?.focus(); return; }
     try {
-      await patchRoom("kitchen", { by: kitchen.by, notes: kitchen.notes.trim(), submittedAt: new Date().toISOString() });
-      clearOpen("kitchen");
-      setEdits((cur) => { const n = { ...cur }; delete n.kitchen; return n; });
-      toast("Kitchen submitted.");
+      await patchRoom(k, { by: u.by, notes: u.notes.trim(), submittedAt: new Date().toISOString() });
+      clearOpen(k);
+      setEdits((cur) => { const n = { ...cur }; delete n[k]; return n; });
+      toast(`${title} submitted.`);
     } catch (err) { toast("Could not submit: " + (err as Error).message); }
   }
 
@@ -268,6 +270,7 @@ export function TonightView() {
     const postedAt = new Date().toISOString();
     const totalCovers = Object.values(rooms).reduce((a, r) => a + (r.open ? r.covers || 0 : 0), 0);
     if (kitchen.sent) rooms.kitchen = { notes: kitchen.r.notes || "", by: kitchen.r.by || "" };
+    if (prep.sent) rooms.prep = { notes: prep.r.notes || "", by: prep.r.by || "" };
     const row = {
       service_date: date, author: mgr, posted_at: postedAt,
       total_covers: totalCovers,
@@ -298,6 +301,54 @@ export function TonightView() {
     }
     setPublishing(false);
   }
+
+  // A collapsible report unit modelled on a room, minus covers and the Closed box (kitchen, prep / MEP).
+  const renderUnit = (k: Unit, title: string) => {
+    const u = unitState(k);
+    const isOpen = openOverride[k] ?? !u.sent;
+    return (
+      <div className={`ho-room ho-kitchen ${u.sent ? "ho-sent" : ""} ${isOpen ? "ho-open" : ""}`}>
+        <div className="ho-rh" onClick={() => setOpenOverride((cur) => ({ ...cur, [k]: !isOpen }))}>
+          <h3>
+            <button type="button" className="ho-rtoggle" aria-expanded={isOpen} aria-controls={`room-${k}`} id={`rh-${k}`}>
+              <span className="ho-rname">{title}</span>
+              <span className="ho-body-s ho-rsum">
+                {u.sent ? `reported by ${u.r.by || "someone"}, submitted ${timeHM(u.r.submittedAt as string)}` : "Not submitted yet"}
+              </span>
+            </button>
+          </h3>
+          <svg className="ho-chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+        <div className="ho-rbody" id={`room-${k}`} role="region" aria-labelledby={`rh-${k}`}>
+          <div className="ho-rin">
+            <div className="ho-r2">
+              <div className="ho-by">
+                <label className="ho-caption" htmlFor={`by-${k}`}>Reported by</label>
+                <select id={`by-${k}`} value={u.by} onChange={(e) => setEdit(k, { by: e.target.value })}>
+                  <option value="">Select who is reporting</option>
+                  {(u.by && !people.includes(u.by) ? [u.by, ...people] : people).map((p) => <option key={p}>{p}</option>)}
+                </select>
+              </div>
+            </div>
+            <textarea
+              placeholder={`Notes for ${title}`} aria-label={`${title} notes`} value={u.notes}
+              onChange={(e) => setEdit(k, { notes: e.target.value })}
+            />
+            <div className="ho-sub">
+              <button type="button" className="ho-btn ho-sm ho-primary" onClick={() => submitUnit(k, title)}>
+                {(u.sent ? "Resubmit " : "Submit ") + title}
+              </button>
+              <span className="ho-stamp">
+                {u.sent ? `Submitted by ${u.r.by || "someone"} at ${timeHM(u.r.submittedAt as string)}` : ""}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const menuList = menuNames(menu);
   const lowP = statusParts(shared.low, menuList);
@@ -337,6 +388,8 @@ export function TonightView() {
           </div>
           <button type="button" className="ho-btn ho-sm ho-pull" disabled={sqBusy} onClick={pullSquare}>Pull tonight&apos;s sales from Square</button>
         </div>
+
+        {renderUnit("prep", "Prep / MEP")}
 
         <section className="ho-module ho-mstack" aria-labelledby="ho-tonight-h">
           <div className="ho-secthead"><h2 className="ho-sectlabel" id="ho-tonight-h">Tonight</h2></div>
@@ -470,46 +523,7 @@ export function TonightView() {
           </div>
         </section>
 
-        <div className={`ho-room ho-kitchen ${kitchen.sent ? "ho-sent" : ""} ${kitchenOpen ? "ho-open" : ""}`}>
-          <div className="ho-rh" onClick={() => setOpenOverride((cur) => ({ ...cur, kitchen: !kitchenOpen }))}>
-            <h3>
-              <button type="button" className="ho-rtoggle" aria-expanded={kitchenOpen} aria-controls="room-kitchen" id="rh-kitchen">
-                <span className="ho-rname">Kitchen</span>
-                <span className="ho-body-s ho-rsum">
-                  {kitchen.sent ? `reported by ${kitchen.r.by || "someone"}, submitted ${timeHM(kitchen.r.submittedAt as string)}` : "Not submitted yet"}
-                </span>
-              </button>
-            </h3>
-            <svg className="ho-chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-              <path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <div className="ho-rbody" id="room-kitchen" role="region" aria-labelledby="rh-kitchen">
-            <div className="ho-rin">
-              <div className="ho-r2">
-                <div className="ho-by">
-                  <label className="ho-caption" htmlFor="by-kitchen">Reported by</label>
-                  <select id="by-kitchen" value={kitchen.by} onChange={(e) => setEdit("kitchen", { by: e.target.value })}>
-                    <option value="">Select who is reporting</option>
-                    {(kitchen.by && !people.includes(kitchen.by) ? [kitchen.by, ...people] : people).map((p) => <option key={p}>{p}</option>)}
-                  </select>
-                </div>
-              </div>
-              <textarea
-                placeholder="Notes for Kitchen" aria-label="Kitchen notes" value={kitchen.notes}
-                onChange={(e) => setEdit("kitchen", { notes: e.target.value })}
-              />
-              <div className="ho-sub">
-                <button type="button" className="ho-btn ho-sm ho-primary" onClick={submitKitchen}>
-                  {kitchen.sent ? "Resubmit Kitchen" : "Submit Kitchen"}
-                </button>
-                <span className="ho-stamp">
-                  {kitchen.sent ? `Submitted by ${kitchen.r.by || "someone"} at ${timeHM(kitchen.r.submittedAt as string)}` : ""}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+        {renderUnit("kitchen", "Kitchen")}
 
         <form id="handover-form" className="ho-stack" onSubmit={publish} autoComplete="off">
           <section className="ho-module ho-mstack" aria-labelledby="ho-vips-h">

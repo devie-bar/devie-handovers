@@ -71,6 +71,13 @@ export function LogView() {
                 </h2>
                 <div className="ho-lbody" id={`log-${h.service_date}`}>
                 <div className="ho-lin">
+                {r.prep ? (
+                  <div className="ho-rbox">
+                    <h3>Prep / MEP</h3>
+                    <span className="ho-n ho-num">{r.prep.by ? "Reported by " + r.prep.by : "Reported"}</span>
+                    {r.prep.notes ? <p>{r.prep.notes}</p> : null}
+                  </div>
+                ) : null}
                 <div className="ho-rms">
                   {ROOMS.map((n) => {
                     const x = r[n.toLowerCase() as "summer"] || {};

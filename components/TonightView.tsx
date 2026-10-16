@@ -424,7 +424,7 @@ export function TonightView() {
               {(author && !people.includes(author) ? [author, ...people] : people).map((p) => <option key={p}>{p}</option>)}
             </select>
           </div>
-          <button type="button" className="ho-btn ho-sm ho-green ho-pull" disabled={sqBusy} onClick={pullSquare}>Pull tonight&apos;s sales from Square</button>
+          <button type="button" className="ho-btn ho-sm ho-green ho-pull" disabled={sqBusy} onClick={pullSquare}>Pull Sales</button>
         </section>
 
         <section className="ho-module ho-mstack" aria-labelledby="ho-tonight-h">

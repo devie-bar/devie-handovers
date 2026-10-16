@@ -346,6 +346,10 @@ body {
 :where(.ho-app) .ho-mrow.ho-s-85{background:var(--dv-warn-tint)}
 :where(.ho-app) .ho-mrow.ho-s-86{background:var(--dv-danger-tint)}
 :where(.ho-app) .ho-mname{min-width:0;font-size:15px}
+:where(.ho-app) .ho-mstock{margin-left:8px;font-size:12px;color:var(--dv-ink-soft)}
+:where(.ho-app) .ho-msug{flex:none;min-height:var(--ctl);padding:0 10px;border:1px solid;border-radius:var(--dv-radius-chip);background:none;font-size:12.5px;font-weight:600}
+:where(.ho-app) .ho-msug.ho-sg-85{color:var(--dv-warn);border-color:var(--dv-warn-line);background:var(--dv-warn-tint)}
+:where(.ho-app) .ho-msug.ho-sg-86{color:var(--dv-danger);border-color:var(--dv-danger-line);background:var(--dv-danger-tint)}
 :where(.ho-app) .ho-mseg{display:flex;flex:none;border:1px solid var(--dv-line);border-radius:var(--dv-radius-inner);overflow:hidden;background:var(--dv-surface)}
 :where(.ho-app) .ho-mseg button{min-height:var(--ctl);min-width:52px;padding:0 12px;border:0;background:none;font-size:13.5px;font-weight:500;color:var(--dv-ink-soft)}
 :where(.ho-app) .ho-mseg button + button{border-left:1px solid var(--dv-line)}

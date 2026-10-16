@@ -75,7 +75,7 @@ function dateTitle(d: string): string {
 type Edit = { by?: string; covers?: string; notes?: string };
 
 export function TonightView() {
-  const { supabase, people, author, setAuthor, items, addItem, menu, menuFailed, retryMenu } = useHandovers();
+  const { supabase, people, author, setAuthor, items, addItem, menu, menuFailed, retryMenu, stock, stockFailed, retryStock } = useHandovers();
   const [date, setDate] = useState(serviceDateNow());
   const [draft, setDraft] = useState<DraftRow>(() => blankDraft(serviceDateNow()));
   const [edits, setEdits] = useState<Partial<Record<SectionKey, Edit>>>({});
@@ -546,6 +546,7 @@ export function TonightView() {
           <div className="ho-f">
             <MenuStatusList
               menu={menu} failed={menuFailed} onRetry={retryMenu} low={shared.low} out={shared.out}
+              stock={stock} stockFailed={stockFailed} onRetryStock={retryStock}
               onChange={(l, o) => { setDirtyShared(true); setShared((s) => ({ ...s, low: l, out: o })); }}
             />
           </div>

@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export interface CurrentMenu { seasonal: string[]; evergreen: string[]; dishes: string[] }
+export interface MenuGroups { seasonal: string[]; evergreen: string[] }
+/** Spring's list is the Alc cocktails, Summer's the DGS cocktails (one on both appears in both), the Kitchen's the dishes. */
+export interface CurrentMenu { alc: MenuGroups; dgs: MenuGroups; dishes: string[] }
 export type MenuState = "good" | "85" | "86";
 
 // "CASSIS_v8" becomes "CASSIS".
@@ -25,25 +27,28 @@ export async function getCurrentMenu(supabase: SupabaseClient): Promise<CurrentM
     const { data: s } = await supabase.from("settings").select("data").eq("id", "alcSections").maybeSingle();
     if (s && s.data && typeof s.data === "object") sections = s.data as Record<string, string>;
   } catch { /* organisational only; fall back to Evergreen */ }
-  const seasonal: string[] = [];
-  const evergreen: string[] = [];
+  const alc: MenuGroups = { seasonal: [], evergreen: [] };
+  const dgs: MenuGroups = { seasonal: [], evergreen: [] };
   const dishes: string[] = [];
   for (const r of (data || []) as { id: string; type: string; data: Record<string, unknown> | null }[]) {
     const d = r.data || {};
     const name = clean(d.name);
-    if (r.type === "cocktail" && (d.onAlc === true || d.onAlc === "true" || d.onDgs === true || d.onDgs === "true")) {
-      (sections[r.id] === "seasonal" ? seasonal : evergreen).push(name);
+    if (r.type === "cocktail") {
+      const into = (g: MenuGroups) => (sections[r.id] === "seasonal" ? g.seasonal : g.evergreen).push(name);
+      if (d.onAlc === true || d.onAlc === "true") into(alc);
+      if (d.onDgs === true || d.onDgs === "true") into(dgs);
     }
     if (r.type === "dish" && (d.category == null || d.category === "") && !name.startsWith("DGS Snack")) dishes.push(name);
   }
-  return { seasonal: uniqueSorted(seasonal), evergreen: uniqueSorted(evergreen), dishes: uniqueSorted(dishes) };
+  const tidy = (g: MenuGroups): MenuGroups => ({ seasonal: uniqueSorted(g.seasonal), evergreen: uniqueSorted(g.evergreen) });
+  return { alc: tidy(alc), dgs: tidy(dgs), dishes: uniqueSorted(dishes) };
 }
 
-/** Menu names in list order: seasonal, evergreen, dishes. */
-export const menuNames = (m: CurrentMenu | null): string[] => (m ? [...m.seasonal, ...m.evergreen, ...m.dishes] : []);
+/** Names of one list in order: seasonal, then evergreen. */
+export const groupNames = (g: MenuGroups): string[] => [...g.seasonal, ...g.evergreen];
 
 /**
- * shared.low / shared.out keep one string. Menu picks are one line of names joined with ", " in list order;
+ * rooms.<key>.low / .out (and the legacy shared.low / shared.out) keep one string. Menu picks are one line of names joined with ", " in list order;
  * every other line is free text for off-menu items. A line counts as picks only when every name on it is a
  * menu name, so "LEMON, top up batch tomorrow" stays free text.
  */

@@ -24,6 +24,11 @@ function squareBlock(sq: SquareSummary): string {
 export function slackText(h: HandoverRow, openItems: MaintenanceItem[], link: string, ids: Record<string, string> = SLACK_IDS) {
   const li = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
   const rooms = h.rooms || {};
+  // "◦ 85: PEACH, CASSIS" and "◦ 86: ..." under a room, each left out when empty.
+  const stockSubs = (x: { low?: string; out?: string }) => [
+    ...(nonEmpty(x.low).length ? [sub(`85: ${nonEmpty(x.low).join(", ")}`)] : []),
+    ...(nonEmpty(x.out).length ? [sub(`86: ${nonEmpty(x.out).join(", ")}`)] : []),
+  ];
   const room = (n: string) => {
     const k = n.toLowerCase() as "summer" | "spring" | "autumn";
     const x = rooms[k] || {};
@@ -33,13 +38,13 @@ export function slackText(h: HandoverRow, openItems: MaintenanceItem[], link: st
     const sr = h.square?.rooms?.[k];
     const sales = sr ? ` · ${eur(sr.gross)} (${sr.tables} table${sr.tables === 1 ? "" : "s"})` : "";
     const head = top(`${name} · ${x.covers || 0} covers${bk && bk.covers > 0 ? ` (${bk.covers} booked)` : ""}${sales}${x.by ? ` · reported by ${mention(x.by, ids)}` : ""}`);
-    return [head, ...nonEmpty(x.notes).map(sub)].join("\n");
+    return [head, ...nonEmpty(x.notes).map(sub), ...stockSubs(x)].join("\n");
   };
-  const unit = (title: string, u?: { by?: string; notes?: string }) =>
-    u && (u.by || nonEmpty(u.notes).length)
-      ? [top(`${title}${u.by ? ` · reported by ${mention(u.by, ids)}` : ""}`), ...nonEmpty(u.notes).map(sub)]
+  const unit = (title: string, u?: { by?: string; notes?: string; low?: string; out?: string }, withStock = false) =>
+    u && (u.by || nonEmpty(u.notes).length || (withStock && stockSubs(u).length))
+      ? [top(`${title}${u.by ? ` · reported by ${mention(u.by, ids)}` : ""}`), ...nonEmpty(u.notes).map(sub), ...(withStock ? stockSubs(u) : [])]
       : [];
-  const kitchen = unit("KITCHEN", rooms.kitchen);
+  const kitchen = unit("KITCHEN", rooms.kitchen, true);
   const prep = unit("PREP / MEP", rooms.prep);
   const general = nonEmpty(h.notes);
   const sections: string[] = [
@@ -54,8 +59,11 @@ export function slackText(h: HandoverRow, openItems: MaintenanceItem[], link: st
   ];
   const list = (title: string, items: string[]) => { if (items.length) sections.push([`**${title}**`, ...items.map(top)].join("\n")); };
   list("VIPs", nonEmpty(h.vips));
-  list("85s", h.low || []);
-  list("86s", h.out || []);
+  // Nights published before 85 / 86 moved into the rooms keep one list for the whole night.
+  if (![rooms.summer, rooms.spring, rooms.autumn, rooms.kitchen].some((x) => x && (x.low || x.out))) {
+    list("85s", h.low || []);
+    list("86s", h.out || []);
+  }
   list("TO DO", nonEmpty(h.todo));
   const haiku = nonEmpty(h.haiku);
   sections.push(haiku.length ? ["**HAIKU**", ...haiku].join("\n") : "No haiku tonight.");

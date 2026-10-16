@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useHandovers } from "@/components/HandoversProvider";
-import { MenuStatusList } from "@/components/MenuChips";
-import { menuNames, statusParts, composeStatus } from "@/lib/menu";
+import { MenuStatusList, type StatusGroup } from "@/components/MenuChips";
+import { groupNames } from "@/lib/menu";
 import { MaintenancePanel } from "@/components/MaintenancePanel";
 import { cap, eur, lines } from "@/lib/format";
 import { serviceDateNow, timeHM, whenShort } from "@/lib/paris";
@@ -49,11 +49,11 @@ function normalise(row: DraftRow): DraftRow {
 function seedFromHandover(prev: HandoverRow): DraftRow {
   const d = blankDraft(prev.service_date);
   const rooms = {} as Record<SectionKey, RoomPart>;
-  if (prev.rooms?.kitchen) rooms.kitchen = { by: prev.rooms.kitchen.by || "", notes: prev.rooms.kitchen.notes || "", submittedAt: prev.posted_at };
+  if (prev.rooms?.kitchen) rooms.kitchen = { by: prev.rooms.kitchen.by || "", notes: prev.rooms.kitchen.notes || "", low: prev.rooms.kitchen.low || "", out: prev.rooms.kitchen.out || "", submittedAt: prev.posted_at };
   if (prev.rooms?.prep) rooms.prep = { by: prev.rooms.prep.by || "", notes: prev.rooms.prep.notes || "", submittedAt: prev.posted_at };
   ROOM_KEYS.forEach((k) => {
     const x: HandoverRoom = prev.rooms?.[k] || {};
-    rooms[k] = { by: prev.author || "", covers: x.covers || 0, notes: x.notes || "", closed: x.open === false, submittedAt: prev.posted_at };
+    rooms[k] = { by: prev.author || "", covers: x.covers || 0, notes: x.notes || "", closed: x.open === false, low: x.low || "", out: x.out || "", submittedAt: prev.posted_at };
   });
   return {
     ...d, status: "published", published_by: prev.author, published_at: prev.posted_at, rooms,
@@ -72,7 +72,7 @@ function dateTitle(d: string): string {
   return new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" }).format(new Date(Date.UTC(y, m - 1, day)));
 }
 
-type Edit = { by?: string; covers?: string; notes?: string };
+type Edit = { by?: string; covers?: string; notes?: string; low?: string; out?: string };
 
 export function TonightView() {
   const { supabase, people, author, setAuthor, items, addItem, menu, menuFailed, retryMenu, stock, stockFailed, retryStock } = useHandovers();
@@ -167,6 +167,9 @@ export function TonightView() {
     };
   };
 
+  // The 85 and 86 strings of one section: this person's unsaved typing over what the draft holds.
+  const statusOf = (k: SectionKey) => ({ low: edits[k]?.low ?? (draft.rooms[k]?.low || ""), out: edits[k]?.out ?? (draft.rooms[k]?.out || "") });
+
   const states = ROOM_KEYS.map((k) => ({ k, ...view(k) }));
   const openRooms = states.filter((s) => !s.closed);
   const submittedCount = openRooms.filter((s) => s.sent).length;
@@ -187,6 +190,22 @@ export function TonightView() {
     setDraft((d) => ({ ...d, rooms: { ...d.rooms, [k]: { ...d.rooms[k], ...part } } }));
   }
 
+  // Typing in a status field only lays over the draft; a toggle or a finished edit is saved at once so other phones see it.
+  // The typed copy is dropped once saved, unless more typing has happened since.
+  async function changeStatus(k: SectionKey, low: string, out: string, persist: boolean) {
+    setEdit(k, { low, out });
+    if (!persist) return;
+    try {
+      await patchRoom(k, { low, out });
+      setEdits((cur) => {
+        const e = cur[k];
+        if (!e || e.low !== low || e.out !== out) return cur;
+        const { low: _l, out: _o, ...keep } = e;
+        return { ...cur, [k]: keep };
+      });
+    } catch (err) { toast("Could not save 85 / 86: " + (err as Error).message); }
+  }
+
   // The kitchen and prep report like a room, without covers or a closed state.
   type Unit = "kitchen" | "prep";
   const unitState = (k: Unit) => {
@@ -199,7 +218,7 @@ export function TonightView() {
     const u = unitState(k);
     if (!u.by) { toast(`Pick who is reporting for ${title.toLowerCase()} before submitting.`); document.getElementById(`by-${k}`)?.focus(); return; }
     try {
-      await patchRoom(k, { by: u.by, notes: u.notes.trim(), submittedAt: new Date().toISOString() });
+      await patchRoom(k, { by: u.by, notes: u.notes.trim(), ...statusOf(k), submittedAt: new Date().toISOString() });
       clearOpen(k);
       setEdits((cur) => { const n = { ...cur }; delete n[k]; return n; });
       toast(`${title} submitted.`);
@@ -214,7 +233,7 @@ export function TonightView() {
   async function submitRoom(k: RoomKey) {
     const s = view(k);
     if (!s.by) { toast(`Pick who is reporting for ${k} before submitting.`); document.getElementById(`by-${k}`)?.focus(); return; }
-    const part: RoomPart = { by: s.by, covers: s.num, notes: s.notes.trim(), closed: false, submittedAt: new Date().toISOString() };
+    const part: RoomPart = { by: s.by, covers: s.num, notes: s.notes.trim(), closed: false, ...statusOf(k), submittedAt: new Date().toISOString() };
     try {
       await patchRoom(k, part);
       clearOpen(k);
@@ -257,6 +276,12 @@ export function TonightView() {
     toast("Draft saved.");
   }
 
+  // Trimmed 85 / 86 strings for a log row, leaving out the empty ones.
+  const statusPair = (k: SectionKey) => {
+    const s = statusOf(k);
+    return { ...(s.low.trim() ? { low: s.low.trim() } : {}), ...(s.out.trim() ? { out: s.out.trim() } : {}) };
+  };
+
   async function publish(e: React.FormEvent) {
     e.preventDefault();
     const mgr = author;
@@ -264,12 +289,12 @@ export function TonightView() {
     const sh = readShared();
     const rooms: Record<string, HandoverRoom> = {};
     states.forEach((s) => {
-      rooms[s.k] = { open: !s.closed, covers: s.num, notes: s.notes, by: edits[s.k]?.by ?? s.r.by ?? "" };
+      rooms[s.k] = { open: !s.closed, covers: s.num, notes: s.notes, by: edits[s.k]?.by ?? s.r.by ?? "", ...statusPair(s.k) };
     });
     const openItems = items.filter((i) => i.status !== "done");
     const postedAt = new Date().toISOString();
     const totalCovers = Object.values(rooms).reduce((a, r) => a + (r.open ? r.covers || 0 : 0), 0);
-    if (kitchen.sent) rooms.kitchen = { notes: kitchen.r.notes || "", by: kitchen.r.by || "" };
+    if (kitchen.sent) rooms.kitchen = { notes: kitchen.r.notes || "", by: kitchen.r.by || "", ...statusPair("kitchen") };
     if (prep.sent) rooms.prep = { notes: prep.r.notes || "", by: prep.r.by || "" };
     const row = {
       service_date: date, author: mgr, posted_at: postedAt,
@@ -301,6 +326,24 @@ export function TonightView() {
     }
     setPublishing(false);
   }
+
+  // Each room's list: Spring the Alc cocktails, Summer the DGS cocktails, Kitchen the dishes.
+  const groupsFor = (k: SectionKey): StatusGroup[] | null => {
+    if (!menu) return null;
+    if (k === "kitchen") return [{ title: "Dishes", items: menu.dishes }];
+    const g = k === "spring" ? menu.alc : menu.dgs;
+    return [{ title: "Cocktails, seasonal", items: g.seasonal }, { title: "Cocktails, evergreen", items: g.evergreen }];
+  };
+  const renderStatus = (k: SectionKey) => {
+    const s = statusOf(k);
+    return (
+      <MenuStatusList
+        idPrefix={`st-${k}`} groups={groupsFor(k)} failed={menuFailed} onRetry={retryMenu} low={s.low} out={s.out}
+        stock={k === "kitchen" ? null : stock} stockFailed={k === "kitchen" ? null : stockFailed} onRetryStock={retryStock}
+        onChange={(l, o, persist) => changeStatus(k, l, o, persist)}
+      />
+    );
+  };
 
   // A collapsible report unit modelled on a room, minus covers and the Closed box (kitchen, prep / MEP).
   const renderUnit = (k: Unit, title: string) => {
@@ -336,6 +379,7 @@ export function TonightView() {
               placeholder={`Notes for ${title}`} aria-label={`${title} notes`} value={u.notes}
               onChange={(e) => setEdit(k, { notes: e.target.value })}
             />
+            {k === "kitchen" && renderStatus(k)}
             <div className="ho-sub">
               <button type="button" className="ho-btn ho-sm ho-primary" onClick={() => submitUnit(k, title)}>
                 {(u.sent ? "Resubmit " : "Submit ") + title}
@@ -350,9 +394,6 @@ export function TonightView() {
     );
   };
 
-  const menuList = menuNames(menu);
-  const lowP = statusParts(shared.low, menuList);
-  const outP = statusParts(shared.out, menuList);
   const sq = draft.square;
   const sqSub = sqBusy ? "Pulling…" : sqErr ?? (sq ? [`${sq.totals.orders} orders`, sq.window ? `${whenShort(sq.window.start)} to ${whenShort(sq.window.end)}` : "", `pulled ${timeHM(sq.pulledAt)}`].filter(Boolean).join(" · ") : "Not pulled yet");
 
@@ -507,6 +548,7 @@ export function TonightView() {
                         placeholder={`Notes for ${name}`} aria-label={`${name} notes`} value={s.notes}
                         onChange={(e) => setEdit(k, { notes: e.target.value })}
                       />
+                      {k !== "autumn" && renderStatus(k)}
                       <div className="ho-sub">
                         <button type="button" className="ho-btn ho-sm ho-primary" onClick={() => submitRoom(k)}>
                           {(r.submittedAt ? "Resubmit " : "Submit ") + name}
@@ -539,23 +581,6 @@ export function TonightView() {
             </div>
           <div className="ho-f"><label className="ho-sr" htmlFor="f-vips">VIPs</label>
             <textarea id="f-vips" value={shared.vips} onChange={(e) => setField("vips", e.target.value)} placeholder="Who came in, who they were with, anything to remember next time" /></div>
-          </section>
-
-          <section className="ho-module ho-mstack" aria-labelledby="ho-stock-h">
-            <div className="ho-secthead"><h2 className="ho-sectlabel" id="ho-stock-h">85 / 86</h2></div>
-          <div className="ho-f">
-            <MenuStatusList
-              menu={menu} failed={menuFailed} onRetry={retryMenu} low={shared.low} out={shared.out}
-              stock={stock} stockFailed={stockFailed} onRetryStock={retryStock}
-              onChange={(l, o) => { setDirtyShared(true); setShared((s) => ({ ...s, low: l, out: o })); }}
-            />
-          </div>
-          <div className="ho-grid2">
-            <div className="ho-f"><label htmlFor="f-85"><span className="ho-chip ho-c85">85</span>Running low, off the menu</label>
-              <textarea id="f-85" value={lowP.extras} onChange={(e) => setField("low", composeStatus(lowP.chosen, e.target.value))} placeholder="One per line, e.g. LEMON, top up batch tomorrow" /></div>
-            <div className="ho-f"><label htmlFor="f-86"><span className="ho-chip ho-c86">86</span>Out, off the menu</label>
-              <textarea id="f-86" value={outP.extras} onChange={(e) => setField("out", composeStatus(outP.chosen, e.target.value))} placeholder="One per line" /></div>
-          </div>
           </section>
 
           <section className="ho-module ho-mstack" aria-labelledby="ho-notes-h">

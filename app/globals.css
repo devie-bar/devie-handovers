@@ -127,6 +127,19 @@ body {
 :where(.ho-app) .ho-st{font-size:12px;color:var(--dv-green-soft);white-space:nowrap}
 :where(.ho-app) .ho-ctl{min-height:var(--ctl);background:transparent;border:1px solid var(--dv-copper-soft);color:#fff;font-size:12.5px;letter-spacing:.03em;padding:0 14px;border-radius:var(--dv-radius-control);cursor:pointer;text-transform:capitalize}
 :where(.ho-app) .ho-ctl:hover{background:rgba(255,255,255,.09)}
+/* Account menu (matches schedule.devie.bar's umenu): avatar + name + caret, opens to who is signed in and Sign out. */
+:where(.ho-app) .ho-um{position:relative}
+:where(.ho-app) .ho-um-btn{display:inline-flex;align-items:center;gap:8px;min-height:var(--ctl);padding:0 12px 0 6px;background:transparent;border:1px solid var(--dv-copper-soft);border-radius:var(--dv-radius-control);color:#fff;font-family:inherit;font-size:13px;cursor:pointer}
+:where(.ho-app) .ho-um-btn:hover,:where(.ho-app) .ho-um-btn[aria-expanded="true"]{background:rgba(255,255,255,.09)}
+:where(.ho-app) .ho-um-av{width:24px;height:24px;border-radius:50%;background:var(--dv-copper);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex:none}
+:where(.ho-app) .ho-um-nm{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+:where(.ho-app) .ho-um-cx{color:var(--dv-copper-soft);font-size:11px}
+:where(.ho-app) .ho-um-pop{position:absolute;right:0;top:calc(100% + 6px);min-width:224px;background:var(--dv-surface);color:var(--dv-ink);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);box-shadow:var(--dv-shadow-overlay);padding:8px;z-index:70}
+:where(.ho-app) .ho-um-hd{padding:8px 10px 10px;border-bottom:1px solid var(--dv-line);margin-bottom:6px}
+:where(.ho-app) .ho-um-hd b{display:block;font-size:13.5px}
+:where(.ho-app) .ho-um-hd span{display:block;font-size:11px;color:var(--dv-ink-soft);overflow:hidden;text-overflow:ellipsis}
+:where(.ho-app) .ho-um-item{display:flex;align-items:center;width:100%;min-height:var(--ctl);padding:0 10px;background:transparent;border:0;border-radius:var(--dv-radius-inner);color:var(--dv-ink);font-family:inherit;font-size:13px;text-align:left;cursor:pointer}
+:where(.ho-app) .ho-um-item:hover{background:var(--dv-line)}
 :where(.ho-app) .ho-wrap{max-width:1280px;margin:0 auto;padding:32px var(--gutter) calc(96px + env(safe-area-inset-bottom,0px))}
 @media (min-width:840px){
   :where(.ho-app) .ho-wrap{padding-top:48px}
@@ -249,6 +262,13 @@ body {
 :where(.ho-app) .ho-kv .ho-stock span{display:inline-block;margin:0 12px 4px 0;font-weight:600;text-transform:uppercase;font-size:12px;letter-spacing:.02em}
 :where(.ho-app) .ho-kv .ho-s85 span{color:var(--dv-warn)}
 :where(.ho-app) .ho-kv .ho-s86 span{color:var(--dv-danger)}
+/* The same chips under a room column in the Log: the 85 / 86 word first, then the names. */
+:where(.ho-app) .ho-rstock{display:grid;gap:4px;margin-top:8px}
+:where(.ho-app) .ho-rstock .ho-stock{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 12px}
+:where(.ho-app) .ho-rstock .ho-stock b{font-size:11px;letter-spacing:.18em;font-weight:700}
+:where(.ho-app) .ho-rstock .ho-stock span{font-weight:600;text-transform:uppercase;font-size:12px;letter-spacing:.02em}
+:where(.ho-app) .ho-rstock .ho-s85 b,:where(.ho-app) .ho-rstock .ho-s85 span{color:var(--dv-warn)}
+:where(.ho-app) .ho-rstock .ho-s86 b,:where(.ho-app) .ho-rstock .ho-s86 span{color:var(--dv-danger)}
 :where(.ho-app) .ho-haiku-out{font-family:var(--dv-display);font-weight:200;font-style:italic;letter-spacing:-.05em;font-size:21px;line-height:1.3;color:var(--dv-ink-soft);margin:0;white-space:pre-wrap;max-width:70ch}
 :where(.ho-app) .ho-mtop{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
 :where(.ho-app) .ho-summ{display:flex;gap:24px}

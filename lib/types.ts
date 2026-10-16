@@ -12,6 +12,9 @@ export interface RoomPart {
   closed?: boolean;
   closedByHand?: boolean;
   submittedAt?: string | null;
+  /** 85 and 86 for this room's list: menu names joined ", " on the first line, free text lines after. */
+  low?: string;
+  out?: string;
 }
 
 export interface Shared {
@@ -59,7 +62,7 @@ export interface DraftRow {
   updated_at?: string;
 }
 
-export interface HandoverRoom { open?: boolean; covers?: number; notes?: string; by?: string }
+export interface HandoverRoom { open?: boolean; covers?: number; notes?: string; by?: string; low?: string; out?: string }
 
 export interface HandoverRow {
   service_date: string;

@@ -3,8 +3,20 @@
 import { useCallback, useEffect, useState } from "react";
 import { useHandovers } from "@/components/HandoversProvider";
 import { useSkeleton } from "@/components/useSkeleton";
-import { eur, fmtDate, longDate } from "@/lib/format";
+import { eur, fmtDate, lines, longDate } from "@/lib/format";
 import { ROOMS, type HandoverRow } from "@/lib/types";
+
+// A room's 85s and 86s as red / orange chips, each omitted when empty.
+function Stock({ x }: { x: { low?: string; out?: string } }) {
+  const l = lines(x.low || ""), o = lines(x.out || "");
+  if (!l.length && !o.length) return null;
+  return (
+    <div className="ho-rstock">
+      {l.length ? <div className="ho-stock ho-s85"><b>85</b>{l.map((n, i) => <span key={i}>{n}</span>)}</div> : null}
+      {o.length ? <div className="ho-stock ho-s86"><b>86</b>{o.map((n, i) => <span key={i}>{n}</span>)}</div> : null}
+    </div>
+  );
+}
 
 export function LogView() {
   const { supabase } = useHandovers();
@@ -51,6 +63,8 @@ export function LogView() {
           <div className="ho-logs">
           {rows.map((h, idx) => {
             const r = h.rooms || {};
+            // Nights published before 85 / 86 moved into the rooms keep one list for the whole night.
+            const perRoom = [r.summer, r.spring, r.autumn, r.kitchen].some((x) => x && (x.low || x.out));
             // The most recent night starts open, older nights collapsed, until someone toggles one by hand.
             const isOpen = openOverride[h.service_date] ?? idx === 0;
             return (
@@ -88,6 +102,7 @@ export function LogView() {
                         <h3>{n}</h3>
                         <span className="ho-n ho-num">{x.covers ?? 0} covers{x.by ? ", reported by " + x.by : ""}</span>
                         {x.notes ? <p>{x.notes}</p> : null}
+                        <Stock x={x} />
                       </div>
                     );
                   })}
@@ -97,12 +112,13 @@ export function LogView() {
                     <h3>Kitchen</h3>
                     <span className="ho-n ho-num">{r.kitchen.by ? "Reported by " + r.kitchen.by : "Reported"}</span>
                     {r.kitchen.notes ? <p>{r.kitchen.notes}</p> : null}
+                    <Stock x={r.kitchen} />
                   </div>
                 ) : null}
                 <dl className="ho-kv">
                   {h.vips ? <><dt className="ho-label">VIPs</dt><dd>{h.vips}</dd></> : null}
-                  {h.low?.length ? <><dt className="ho-label">85s</dt><dd className="ho-stock ho-s85">{h.low.map((x, i) => <span key={i}>{x}</span>)}</dd></> : null}
-                  {h.out?.length ? <><dt className="ho-label">86s</dt><dd className="ho-stock ho-s86">{h.out.map((x, i) => <span key={i}>{x}</span>)}</dd></> : null}
+                  {!perRoom && h.low?.length ? <><dt className="ho-label">85s</dt><dd className="ho-stock ho-s85">{h.low.map((x, i) => <span key={i}>{x}</span>)}</dd></> : null}
+                  {!perRoom && h.out?.length ? <><dt className="ho-label">86s</dt><dd className="ho-stock ho-s86">{h.out.map((x, i) => <span key={i}>{x}</span>)}</dd></> : null}
                   {h.notes ? <><dt className="ho-label">Notes</dt><dd>{h.notes}</dd></> : null}
                   {h.todo ? <><dt className="ho-label">To do</dt><dd>{h.todo}</dd></> : null}
                   {h.square ? (

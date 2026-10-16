@@ -11,8 +11,8 @@ import { SignOutButton } from "@/components/SignOutButton";
  * is justified between the wordmark and the account controls and is measured,
  * not a breakpoint. When it does not fit, it becomes one Menu button that drops
  * the whole navigation down. Two-tier: the green bar carries the top-level
- * sections (Service, Maintenance); each section's pages sit in the cream
- * secondary bar (SubNav) and preview in a hover flyout on desktop.
+ * sections (today only Service); each section's pages (Tonight, Log,
+ * Maintenance) sit in the cream secondary bar (SubNav).
  */
 const NAV_FULL_GAP = 28; // .ho-top-in column gap in full mode
 
@@ -23,8 +23,6 @@ export const GROUPS: HoGroup[] = [
   { key: "service", label: "Service", items: [
     { href: "/", label: "Tonight" },
     { href: "/log", label: "Log" },
-  ] },
-  { key: "maintenance", label: "Maintenance", items: [
     { href: "/maintenance", label: "Maintenance" },
   ] },
 ];
@@ -119,18 +117,9 @@ export function PrimaryNav() {
       ) : (
         <nav className="ho-toptabs ho-navslot" aria-label="Handovers sections">
           {GROUPS.map((g) => (
-            <div className="ho-navgroup" key={g.key}>
-              <Link href={g.items[0].href} className={"ho-tab" + (isGroupActive(g) ? " on" : "")} aria-current={isGroupActive(g) ? "page" : undefined}>
-                {g.label}
-              </Link>
-              {g.items.length > 1 && (
-                <div className="ho-navdrop">
-                  {g.items.map((it) => (
-                    <Link key={it.href} href={it.href} className={isActive(it.href) ? "on" : undefined}>{it.label}</Link>
-                  ))}
-                </div>
-              )}
-            </div>
+            <Link key={g.key} href={g.items[0].href} className={"ho-tab" + (isGroupActive(g) ? " on" : "")} aria-current={isGroupActive(g) ? "page" : undefined}>
+              {g.label}
+            </Link>
           ))}
         </nav>
       )}

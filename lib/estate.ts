@@ -13,6 +13,7 @@ export const ESTATE: EstateApp[] = [
   { key: "events",    label: "Events",    blurb: "Event enquiries through to invoicing", url: "https://events.devie.bar" },
   { key: "book",      label: "Book",      blurb: "Guest booking for the bar", url: "https://book.devie.bar" },
   { key: "handovers", label: "Handovers", blurb: "Nightly handovers and the maintenance list", url: "https://handovers.devie.bar" },
+  { key: "boards",    label: "Boards",    blurb: "Team task boards with lists and cards", url: "https://boards.devie.bar" },
 ];
 
 export const ESTATE_HOME = "https://dashboard.devie.bar";

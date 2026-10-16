@@ -1,9 +1,7 @@
 "use client";
 
 import { statusParts, composeStatus, type MenuState } from "@/lib/menu";
-import { STOCK_PAR_85, suggestState, type StockCounts } from "@/lib/stock";
-
-const RANK: Record<MenuState, number> = { good: 0, "85": 1, "86": 2 };
+import { suggestState, type StockCounts } from "@/lib/stock";
 
 export interface StatusGroup { title: string; items: string[] }
 
@@ -33,23 +31,13 @@ export function MenuStatusList({
     if (st === "86") o.push(n);
     onChange(composeStatus(names.filter((x) => l.includes(x)), L.extras), composeStatus(names.filter((x) => o.includes(x)), O.extras), true);
   };
-  // Square-based suggestions. A suggestion only ever raises a drink (Good to 85, 85 to 86); it never lowers one the
-  // team has already set, and nothing is applied until someone presses a button.
-  const suggestion = (n: string): { st: MenuState; count: number } | null => {
+  // Square's count for a drink, and the state it suggests (85 at the par level or below, 86 at none). The suggestion is
+  // only ever shown as a glow on that option of the toggle; nothing is changed until someone presses it.
+  const suggested = (n: string): { st: MenuState; count: number } | null => {
     const c = stock ? stock[n] : undefined;
     if (c == null) return null;
     const st = suggestState(c);
-    return RANK[st] > RANK[stateOf(n)] ? { st, count: c } : null;
-  };
-  const pending = names.map((n) => ({ n, sg: suggestion(n) })).filter((x): x is { n: string; sg: { st: MenuState; count: number } } => !!x.sg);
-  const applyAll = () => {
-    const l = new Set(L.chosen), o = new Set(O.chosen);
-    for (const { n, sg } of pending) {
-      l.delete(n); o.delete(n);
-      if (sg.st === "85") l.add(n);
-      if (sg.st === "86") o.add(n);
-    }
-    onChange(composeStatus(names.filter((x) => l.has(x)), L.extras), composeStatus(names.filter((x) => o.has(x)), O.extras), true);
+    return st === "good" ? null : { st, count: c };
   };
   const OPTIONS: { v: MenuState; label: string }[] = [{ v: "good", label: "Good" }, { v: "85", label: "85" }, { v: "86", label: "86" }];
   const group = (title: string, items: string[]) => items.length > 0 && (
@@ -63,16 +51,21 @@ export function MenuStatusList({
               {n}
               {stock && stock[n] != null && <span className="ho-mstock">{Math.max(0, Math.round(stock[n]))} left</span>}
             </span>
-            {suggestion(n) && (
-              <button type="button" className={`ho-msug ho-sg-${suggestion(n)!.st}`} onClick={() => set(n, suggestion(n)!.st)}
-                title={`Square has ${Math.max(0, Math.round(suggestion(n)!.count))} left`}>
-                Suggest {suggestion(n)!.st}
-              </button>
-            )}
             <div className="ho-mseg" role="group" aria-label={`${n} status`}>
-              {OPTIONS.map((o) => (
-                <button key={o.v} type="button" aria-pressed={st === o.v} className={st === o.v ? `ho-on ho-o-${o.v}` : ""} onClick={() => set(n, o.v)}>{o.label}</button>
-              ))}
+              {OPTIONS.map((o) => {
+                const sg = suggested(n);
+                const glow = !!sg && sg.st === o.v && st !== o.v;
+                return (
+                  <button
+                    key={o.v} type="button" aria-pressed={st === o.v}
+                    className={st === o.v ? `ho-on ho-o-${o.v}` : glow ? "ho-sug" : ""}
+                    title={glow ? `Square: ${Math.max(0, Math.round(sg!.count))} left` : undefined}
+                    onClick={() => set(n, o.v)}
+                  >
+                    {o.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         );
@@ -80,7 +73,6 @@ export function MenuStatusList({
     </div>
   );
 
-  const hasStock = !!stock && names.some((n) => stock[n] != null);
   return (
     <>
     {failed && (
@@ -93,16 +85,6 @@ export function MenuStatusList({
       <div className="ho-mfail">
         <span className="ho-caption">Square stock did not load, so no 85 / 86 suggestions: {stockFailed}</span>
         {onRetryStock && <button type="button" className="ho-btn ho-sm" onClick={onRetryStock}>Retry</button>}
-      </div>
-    )}
-    {!failed && !stockFailed && hasStock && (
-      <div className="ho-mfail">
-        <span className="ho-caption">
-          {pending.length > 0
-            ? `Square suggests ${pending.length} change${pending.length === 1 ? "" : "s"}: 85 at ${STOCK_PAR_85} or fewer left, 86 at none.`
-            : `Square counts agree with the list below (85 at ${STOCK_PAR_85} or fewer left, 86 at none).`}
-        </span>
-        {pending.length > 0 && <button type="button" className="ho-btn ho-sm" onClick={applyAll}>Apply suggestions</button>}
       </div>
     )}
     {groups && <div className="ho-mlist">{groups.map((g) => group(g.title, g.items))}</div>}

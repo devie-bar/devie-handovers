@@ -51,7 +51,8 @@ export interface SquareSummary {
 }
 
 /** One line of a section's nightly checklist (public.handover_checklists). */
-export interface ChecklistItem { id: string; section: SectionKey; label: string; sort: number; active: boolean }
+/** detail is the muted second line, only set for items that come from the Tasks app. */
+export interface ChecklistItem { id: string; section: SectionKey; label: string; sort: number; active: boolean; detail?: string | null }
 
 export interface DraftRow {
   service_date: string;

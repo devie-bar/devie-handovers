@@ -76,7 +76,7 @@ function dateTitle(d: string): string {
 type Edit = { by?: string; covers?: string; notes?: string; low?: string; out?: string; checks?: string[] };
 
 export function TonightView() {
-  const { supabase, people, author, setAuthor, items, addItem, checklist, menu, menuFailed, retryMenu, stock, stockFailed, retryStock } = useHandovers();
+  const { supabase, people, author, setAuthor, items, addItem, checklistFor, menu, menuFailed, retryMenu, stock, stockFailed, retryStock } = useHandovers();
   const [date, setDate] = useState(serviceDateNow());
   const [draft, setDraft] = useState<DraftRow>(() => blankDraft(serviceDateNow()));
   const [edits, setEdits] = useState<Partial<Record<SectionKey, Edit>>>({});
@@ -189,7 +189,7 @@ export function TonightView() {
   // Labels of the section's active items still unticked, for the log row.
   const notDoneOf = (k: SectionKey): string[] => {
     const t = checksOf(k);
-    return checklist.filter((i) => i.section === k && i.active && !t.includes(i.id)).sort((a, b) => a.sort - b.sort).map((i) => i.label);
+    return checklistFor(k, date).items.filter((i) => !t.includes(i.id)).map((i) => i.label);
   };
 
   const states = ROOM_KEYS.map((k) => ({ k, ...view(k) }));
@@ -374,7 +374,7 @@ export function TonightView() {
   };
 
   const renderChecklist = (k: SectionKey, title: string) => (
-    <Checklist section={k} title={title} ticked={checksOf(k)} onChange={(ids) => changeChecks(k, ids)} />
+    <Checklist section={k} title={title} date={date} ticked={checksOf(k)} onChange={(ids) => changeChecks(k, ids)} />
   );
 
   // A collapsible report unit modelled on a room, minus covers and the Closed box (kitchen, prep / MEP).

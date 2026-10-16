@@ -9,14 +9,16 @@ import type { SectionKey } from "@/lib/types";
  * ticked is the night's own state (held by the caller, saved with the draft); the items themselves are shared
  * across nights and edited here by admins only.
  */
-export function Checklist({ section, title, ticked, onChange }: {
-  section: SectionKey; title: string; ticked: string[]; onChange: (ids: string[]) => void;
+export function Checklist({ section, title, date, ticked, onChange }: {
+  section: SectionKey; title: string; date: string; ticked: string[]; onChange: (ids: string[]) => void;
 }) {
-  const { checklist, checklistFailed, retryChecklist, isAdmin, addChecklistItem, renameChecklistItem, moveChecklistItem, deactivateChecklistItem } = useHandovers();
+  const { checklistFor, checklistFailed, retryChecklist, isAdmin, addChecklistItem, renameChecklistItem, moveChecklistItem, deactivateChecklistItem } = useHandovers();
   const [editing, setEditing] = useState(false);
   const [draftLabel, setDraftLabel] = useState("");
   const [err, setErr] = useState("");
-  const items = checklist.filter((i) => i.section === section && i.active).sort((a, b) => a.sort - b.sort);
+  // The Tasks app's closedown lists when it has any for this section, otherwise the local list (editable here).
+  const { items, source } = checklistFor(section, date);
+  const fromTasks = source === "tasks";
   const done = items.filter((i) => ticked.includes(i.id)).length;
   const run = async (p: Promise<string | null>) => { const e = await p; setErr(e ? "Could not save: " + e : ""); };
 
@@ -27,20 +29,23 @@ export function Checklist({ section, title, ticked, onChange }: {
       <div className="ho-checkh">
         <h4 className="ho-checklabel">Checklist</h4>
         <span className="ho-caption" aria-live="polite">{items.length ? `${done} of ${items.length}` : ""}</span>
-        {isAdmin && (
+        {isAdmin && (fromTasks ? (
+          <a className="ho-checkedit" href="https://tasks.devie.bar" target="_blank" rel="noopener noreferrer">Edit in Tasks →</a>
+        ) : (
           <button type="button" className="ho-checkedit" aria-pressed={editing} onClick={() => { setEditing((e) => !e); setErr(""); }}>
             {editing ? "Done" : "Edit"}
           </button>
-        )}
+        ))}
       </div>
+      <span className="ho-caption ho-checksrc">{fromTasks ? "From Tasks" : "Local list"}</span>
 
       {checklistFailed ? (
         <div className="ho-mfail">
           <span className="ho-caption">Checklist did not load: {checklistFailed}</span>
           <button type="button" className="ho-btn ho-sm" onClick={retryChecklist}>Retry</button>
         </div>
-      ) : !editing ? (
-        items.length === 0 ? <p className="ho-caption ho-checkempty">No items on this checklist yet.</p> : (
+      ) : !editing || fromTasks ? (
+        items.length === 0 ? <p className="ho-caption ho-checkempty">{fromTasks ? "Nothing on the closedown list for tonight." : "No items on this checklist yet."}</p> : (
           <ul className="ho-checklist">
             {items.map((i) => {
               const on = ticked.includes(i.id);
@@ -48,7 +53,7 @@ export function Checklist({ section, title, ticked, onChange }: {
                 <li key={i.id}>
                   <label className={"ho-crow" + (on ? " ho-done" : "")}>
                     <input type="checkbox" checked={on} onChange={() => toggle(i.id)} />
-                    <span>{i.label}</span>
+                    <span>{i.label}{i.detail ? <small className="ho-cdetail">{i.detail}</small> : null}</span>
                   </label>
                 </li>
               );

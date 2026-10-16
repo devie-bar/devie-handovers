@@ -235,6 +235,11 @@ body {
 :where(.ho-app) .ho-cedit{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0}
 :where(.ho-app) .ho-cedit input{flex:1 1 140px;min-width:0;min-height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 12px}
 :where(.ho-app) .ho-checkempty{margin:0}
+:where(.ho-app) .ho-checksrc{margin-top:-4px;font-size:11px}
+:where(.ho-app) .ho-cdetail{display:block;font-size:12px;line-height:1.4;color:var(--dv-ink-soft);text-decoration:none;margin-top:1px}
+:where(.ho-app) .ho-crow{padding:6px 0}
+:where(.ho-app) .ho-crow.ho-done .ho-cdetail{text-decoration:line-through}
+:where(.ho-app) a.ho-checkedit{display:inline}
 :where(.ho-app) .ho-room.ho-off .ho-r2,:where(.ho-app) .ho-room.ho-off .ho-by,:where(.ho-app) .ho-room.ho-off .ho-sub{display:none}
 :where(.ho-app) .ho-mtop h2{font-size:26px}
 :where(.ho-app) .ho-sq{display:grid;gap:12px}

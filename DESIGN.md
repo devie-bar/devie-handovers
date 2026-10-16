@@ -675,3 +675,14 @@ switching, merging and pushing happen in your own terminal.
 ---
 
 *Changes to this file are changes to every De Vie app. Discuss before editing.*
+---
+
+## Layout width — estate standard (1100px)
+
+Every app holds to one content width so it reads identically on iPad landscape and laptop. This supersedes the earlier "content capped at 1280" guidance.
+
+- **Max-width: 1100px**, centred, with an **18px side gutter**.
+- Coloured bars (primary nav, any sub-nav) are **full-bleed** — the background spans the viewport — but their **content is centred at 1100px**, so the logo and tabs line up with the page content below.
+- **Data-dense tools** (schedule, library, dashboard, finance, socials, handovers) cap every page at 1100px. A genuinely wide view — e.g. the rota's week grid — **scrolls horizontally inside the 1100px frame** rather than widening the page.
+- **Reading-first apps** (pitch proposals, guest booking) may sit narrower where a shorter line keeps prose readable; they never exceed 1100px.
+- In Tailwind apps use `max-w-[1100px]`; in CSS apps set `max-width:1100px;margin:0 auto` on the main wrapper and the nav inner container.

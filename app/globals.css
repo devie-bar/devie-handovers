@@ -369,10 +369,10 @@ body {
   :where(.ho-app) .ho-skel i::after,:where(.ho-app) .ho-swap-in-r,:where(.ho-app) .ho-swap-in-l{animation:none}
 }
 
-/* The title row is a module without a label: the date heading with Change date inline beside it on the left (baseline
+/* The top of the Tonight module (its hairline header): the date heading with Change date inline beside it on the left (baseline
    aligned, small gap), Pull Sales on the far right. */
-:where(.ho-app) .ho-head{display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap}
-:where(.ho-app) .ho-head h1{margin:0}
+:where(.ho-app) .ho-tophead{align-items:center;gap:12px 24px;padding-bottom:12px}
+:where(.ho-app) .ho-tophead h1{margin:0}
 :where(.ho-app) .ho-hl{display:flex;align-items:baseline;gap:4px 8px;flex-wrap:wrap;min-width:0}
 :where(.ho-app) .ho-quiet{background:none;border-color:transparent;color:var(--dv-ink-soft);padding:0 8px}
 

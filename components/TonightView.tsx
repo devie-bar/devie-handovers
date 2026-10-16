@@ -312,7 +312,6 @@ export function TonightView() {
   function pointAtMissing() {
     const first = missing[0];
     if (first.open) setOpenOverride((cur) => ({ ...cur, [first.open!]: true }));
-    toast(`Pick the ${first.label} first.`);
     const go = () => {
       const el = document.getElementById(first.id) as HTMLSelectElement | null;
       if (!el) return;
@@ -474,9 +473,10 @@ export function TonightView() {
       )}
 
       <div className="ho-stack">
-        <section className="ho-module ho-head" aria-label="Night and handover author">
+        <section className="ho-module ho-mstack" aria-labelledby="ho-night-h">
+          <div className="ho-secthead ho-tophead">
           <div className="ho-hl">
-            <h1>{dateTitle(date)}</h1>
+            <h1 id="ho-night-h">{dateTitle(date)}</h1>
             {pickDate ? (
               <input type="date" id="f-date" aria-label="Service date" required autoFocus value={date}
                 onChange={(e) => e.target.value && setDate(e.target.value)} onBlur={() => setPickDate(false)} />
@@ -485,10 +485,7 @@ export function TonightView() {
             )}
           </div>
           <button type="button" className="ho-btn ho-sm ho-green ho-pull" disabled={sqBusy} onClick={pullSquare}>Pull Sales</button>
-        </section>
-
-        <section className="ho-module ho-mstack" aria-labelledby="ho-tonight-h">
-          <div className="ho-secthead"><h2 className="ho-sectlabel" id="ho-tonight-h">Tonight</h2></div>
+          </div>
           <div className="ho-night">
             <div><span className="ho-display ho-num">{total}</span><span className="ho-label">Total covers</span></div>
             <div><span className="ho-display ho-num">{booked ? booked.all?.covers ?? 0 : "None"}</span><span className="ho-label" title="Booked in SevenRooms">Booked<span className="ho-lx"> in SevenRooms</span></span></div>

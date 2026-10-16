@@ -30,7 +30,7 @@ interface Ctx {
   retryStock: () => void;
   isAdmin: boolean;
   checklist: ChecklistItem[];
-  /** The items a section shows on a service date: the Tasks app's closedown lists if it has any for the section, else the local list. */
+  /** The items a section shows on a service date: the Tasks app's closing lists if it has any for the section, else the local list. */
   checklistFor: (section: SectionKey, date: string) => { items: ChecklistItem[]; source: "tasks" | "local" };
   checklistFailed: string | null;
   retryChecklist: () => void;
@@ -107,53 +107,70 @@ export function HandoversProvider({ displayName, isAdmin, children }: { displayN
     return () => { supabase.removeChannel(ch); };
   }, [supabase, loadChecklist]);
   const activeOf = useCallback((section: string) => checklist.filter((i) => i.section === section && i.active).sort((a, b) => a.sort - b.sort), [checklist]);
-  // The Tasks app's closedown lists. A missing section column, a missing table or no access all read as "no lists",
-  // which leaves the local checklist in use.
-  interface TaskList { id: string; section: string | null; days: unknown; sort_order: number | null }
-  interface TaskItem { id: string; list_id: string; title: string; detail: string | null; sort_order: number | null }
+  // The Tasks app's closing lists (kind = 'closing'). Rooms are task_sections matched by name; an item belongs to a
+  // room through task_items.section_id. Any read error reads as "no lists", which leaves the local checklist in use.
+  interface TaskList { id: string; days: unknown; sort_order: number | null }
+  interface TaskSection { id: string; list_id: string; name: string; sort_order: number | null }
+  interface TaskItem { id: string; list_id: string; section_id: string | null; title: string; detail: string | null; sort_order: number | null }
   const [taskLists, setTaskLists] = useState<TaskList[]>([]);
+  const [taskSections, setTaskSections] = useState<TaskSection[]>([]);
   const [taskItems, setTaskItems] = useState<TaskItem[]>([]);
   const loadTasks = useCallback(async () => {
+    const none = () => { setTaskLists([]); setTaskSections([]); setTaskItems([]); };
     try {
-      const l = await supabase.from("task_lists").select("*").eq("active", true).eq("kind", "closedown");
-      if (l.error) { setTaskLists([]); setTaskItems([]); return; }
-      const lists = ((l.data || []) as TaskList[]).filter((x) => x.section);
-      const i = lists.length ? await supabase.from("task_items").select("*").eq("active", true).in("list_id", lists.map((x) => x.id)) : { data: [], error: null };
-      if (i.error) { setTaskLists([]); setTaskItems([]); return; }
+      const l = await supabase.from("task_lists").select("*").eq("active", true).eq("kind", "closing");
+      if (l.error) { none(); return; }
+      const lists = (l.data || []) as TaskList[];
+      if (!lists.length) { none(); return; }
+      const ids = lists.map((x) => x.id);
+      const [sec, it] = await Promise.all([
+        supabase.from("task_sections").select("*").eq("active", true).in("list_id", ids),
+        supabase.from("task_items").select("*").eq("active", true).in("list_id", ids),
+      ]);
+      if (sec.error || it.error) { none(); return; }
       setTaskLists(lists);
-      setTaskItems((i.data || []) as TaskItem[]);
-    } catch { setTaskLists([]); setTaskItems([]); }
+      setTaskSections((sec.data || []) as TaskSection[]);
+      setTaskItems((it.data || []) as TaskItem[]);
+    } catch { setTaskLists([]); setTaskSections([]); setTaskItems([]); }
   }, [supabase]);
   useEffect(() => {
     loadTasks();
     const ch = supabase
-      .channel("task-closedown")
+      .channel("task-closing")
       .on("postgres_changes", { event: "*", schema: "public", table: "task_lists" }, () => { loadTasks(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "task_sections" }, () => { loadTasks(); })
       .on("postgres_changes", { event: "*", schema: "public", table: "task_items" }, () => { loadTasks(); })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [supabase, loadTasks]);
 
+  // Alex's mapping of Tasks room names to Handovers sections: the Winter section is the Prep / MEP list.
+  const SECTION_OF_NAME: Record<string, SectionKey> = { winter: "prep", spring: "spring", summer: "summer", autumn: "autumn", kitchen: "kitchen" };
+
   const checklistFor = useCallback((section: SectionKey, date: string) => {
-    const mine = taskLists.filter((x) => x.section === section);
-    if (mine.some((x) => taskItems.some((it) => it.list_id === x.id))) {
-      const wd = new Date(date + "T12:00:00Z").getUTCDay(); // 0 = Sunday
+    const secs = taskSections.filter((x) => SECTION_OF_NAME[x.name.trim().toLowerCase()] === section);
+    const secIds = new Set(secs.map((x) => x.id));
+    const mine = taskItems.filter((it) => it.section_id && secIds.has(it.section_id));
+    if (mine.length) {
+      // days is an int[] with ISO weekdays, 1 = Monday to 7 = Sunday; the weekday is the service date's.
+      const wd = new Date(date + "T12:00:00Z").getUTCDay();
       const iso = wd === 0 ? 7 : wd;
-      const abbr = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][wd];
-      // days is an int[] in Tasks (1 = Monday to 7 = Sunday; 0 also read as Sunday); text names are accepted too.
-      const runsToday = (days: unknown) => {
-        if (!Array.isArray(days) || days.length === 0) return true;
-        return days.some((d) => (typeof d === "number" ? d === iso || (d === 0 && wd === 0) : String(d).trim().toLowerCase().slice(0, 3) === abbr));
-      };
+      const listOf = new Map(taskLists.map((x) => [x.id, x]));
+      const secOf = new Map(secs.map((x) => [x.id, x]));
       const items = mine
-        .filter((x) => runsToday(x.days))
-        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-        .flatMap((x) => taskItems.filter((it) => it.list_id === x.id).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)))
+        .filter((it) => {
+          const d = listOf.get(it.list_id)?.days;
+          return !Array.isArray(d) || d.length === 0 || d.includes(iso);
+        })
+        .sort((a, b) =>
+          ((listOf.get(a.list_id)?.sort_order ?? 0) - (listOf.get(b.list_id)?.sort_order ?? 0)) ||
+          ((secOf.get(a.section_id!)?.sort_order ?? 0) - (secOf.get(b.section_id!)?.sort_order ?? 0)) ||
+          ((a.sort_order ?? 0) - (b.sort_order ?? 0)))
         .map((it, n): ChecklistItem => ({ id: it.id, section, label: it.title, detail: it.detail, sort: n + 1, active: true }));
       return { items, source: "tasks" as const };
     }
     return { items: activeOf(section), source: "local" as const };
-  }, [taskLists, taskItems, activeOf]);
+  }, [taskLists, taskSections, taskItems, activeOf]);
 
   const addChecklistItem = useCallback(async (section: SectionKey, label: string) => {
     const sort = activeOf(section).reduce((m, i) => Math.max(m, i.sort), 0) + 1;

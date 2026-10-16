@@ -381,12 +381,13 @@ body {
 :where(.ho-app) select.ho-author{height:38px;background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 10px;min-width:180px;font-size:13px}
 @media (max-width:839.98px){:where(.ho-app) select.ho-author{height:44px}}
 @media (max-width:599.98px){:where(.ho-app) select.ho-author{width:100%}}
-:where(.ho-app) .ho-pubwrap{display:flex;align-items:center;gap:12px}
-:where(.ho-app) .ho-missing{max-width:300px;text-align:right}
-@media (max-width:599.98px){
-  :where(.ho-app) .ho-pubwrap{flex-direction:column;align-items:stretch;gap:6px}
-  :where(.ho-app) .ho-missing{max-width:none;text-align:left}
-}
+/* A required reporter is missing: the select shakes (4 swings of 4px over 400ms) and a copper ring fades out. Scrolling
+   leaves room for the sticky header and the sticky footer. Reduced motion keeps the ring and drops the shake. */
+:where(.ho-app) .ho-room select{scroll-margin:120px 0 160px}
+:where(.ho-app) select.ho-shake{animation:ho-shake .4s linear 1,ho-ring 1s ease-out 1}
+@keyframes ho-shake{0%,100%{transform:translateX(0)}12.5%{transform:translateX(-4px)}25%{transform:translateX(4px)}37.5%{transform:translateX(-4px)}50%{transform:translateX(4px)}62.5%{transform:translateX(-4px)}75%{transform:translateX(4px)}87.5%{transform:translateX(-4px)}}
+@keyframes ho-ring{0%{box-shadow:0 0 0 3px var(--dv-copper)}100%{box-shadow:0 0 0 3px rgba(225,96,0,0)}}
+@media (prefers-reduced-motion:reduce){:where(.ho-app) select.ho-shake{animation:ho-ring 1s ease-out 1}}
 :where(.ho-app) .ho-night{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px 24px}
 :where(.ho-app) .ho-night > div{display:grid;gap:2px;flex:0 0 auto}
 /* Weight chosen on purpose (DESIGN.md 2.3): the Ultralight default is too faint for the night's

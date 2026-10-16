@@ -299,12 +299,33 @@ export function TonightView() {
   }
 
   // What still blocks Publish: the handover author, and a reporter for Prep / MEP, each room that is not closed, and Kitchen.
-  const missing = [
-    ...(author ? [] : ["handover author"]),
-    ...(prep.by ? [] : ["Prep / MEP reporter"]),
-    ...states.filter((s) => !s.closed && !s.by).map((s) => `${cap(s.k)} reporter`),
-    ...(kitchen.by ? [] : ["Kitchen reporter"]),
+  // In page order, so the first one is the one to take the person to.
+  const missing: { label: string; id: string; open?: SectionKey }[] = [
+    ...(author ? [] : [{ label: "handover author", id: "author" }]),
+    ...(prep.by ? [] : [{ label: "Prep / MEP reporter", id: "by-prep", open: "prep" as SectionKey }]),
+    ...states.filter((s) => !s.closed && !s.by).map((s) => ({ label: `${cap(s.k)} reporter`, id: `by-${s.k}`, open: s.k as SectionKey })),
+    ...(kitchen.by ? [] : [{ label: "Kitchen reporter", id: "by-kitchen", open: "kitchen" as SectionKey }]),
   ];
+
+  // Publish stays clickable. When something is missing it opens the module, scrolls to the select, focuses it and
+  // shakes it, and publishes nothing.
+  function pointAtMissing() {
+    const first = missing[0];
+    if (first.open) setOpenOverride((cur) => ({ ...cur, [first.open!]: true }));
+    toast(`Pick the ${first.label} first.`);
+    const go = () => {
+      const el = document.getElementById(first.id) as HTMLSelectElement | null;
+      if (!el) return;
+      el.focus({ preventScroll: true });
+      if (first.id !== "author") el.scrollIntoView({ block: "center", behavior: "smooth" });
+      el.classList.remove("ho-shake");
+      void el.offsetWidth; // restart the animation if it was still running
+      el.classList.add("ho-shake");
+      setTimeout(() => el.classList.remove("ho-shake"), 1000);
+    };
+    // A collapsed module needs its 150ms expand to finish before the select can be centred.
+    setTimeout(go, first.open ? 200 : 0);
+  }
 
   // Trimmed 85 / 86 strings for a log row, leaving out the empty ones.
   const statusPair = (k: SectionKey) => {
@@ -321,7 +342,7 @@ export function TonightView() {
   async function publish(e: React.FormEvent) {
     e.preventDefault();
     const mgr = author;
-    if (missing.length) { toast("Missing: " + missing.join(", ") + "."); return; }
+    if (missing.length) { pointAtMissing(); return; }
     const sh = readShared();
     const rooms: Record<string, HandoverRoom> = {};
     states.forEach((s) => {
@@ -680,10 +701,7 @@ export function TonightView() {
             </select>
             <div className="ho-commit-btns">
               <button type="button" className="ho-btn ho-act" onClick={saveDraft}>Save draft</button>
-              <div className="ho-pubwrap">
-              {missing.length > 0 && <span className="ho-caption ho-missing" role="status">Missing: {missing.join(", ")}</span>}
-              <button type="submit" form="handover-form" className="ho-btn ho-act ho-primary" disabled={publishing || missing.length > 0}>{testMode ? "Publish (test to me)" : published ? "Publish again" : "Publish handover"}</button>
-              </div>
+              <button type="submit" form="handover-form" className="ho-btn ho-act ho-primary" disabled={publishing}>{testMode ? "Publish (test to me)" : published ? "Publish again" : "Publish handover"}</button>
             </div>
           </div>
         </section>

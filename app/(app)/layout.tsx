@@ -30,7 +30,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="ho-app">
         <HandoversProvider displayName={user.displayName}>
           {/* DESIGN.md 3.1, 3.7, 3.8: one sticky green strip carrying wordmark, estate switcher, sections and account */}
-          <AppHeader current="handovers" />
+          <AppHeader current="handovers" name={user.displayName} email={user.email} />
           <div className="ho-wrap">
             <main>{children}</main>
           </div>

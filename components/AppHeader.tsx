@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ESTATE, ESTATE_HOME } from "@/lib/estate";
+import { ESTATE } from "@/lib/estate";
 import { HeaderWho } from "@/components/HeaderWho";
 import { PrimaryNav } from "@/components/PrimaryNav";
 
@@ -12,7 +12,7 @@ import { PrimaryNav } from "@/components/PrimaryNav";
  * single bar; EstateNav.tsx is left byte-identical to the other repos and is no
  * longer rendered here.
  */
-export function AppHeader({ current }: { current: string }) {
+export function AppHeader({ current, name, email }: { current: string; name: string; email?: string | null }) {
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const here = ESTATE.find((a) => a.key === current);
@@ -32,15 +32,13 @@ export function AppHeader({ current }: { current: string }) {
     <header className="ho-top">
       <div className="ho-top-in">
         <div className="ho-brandrow">
-          <a href={ESTATE_HOME} className="ho-brand" aria-label="De Vie">
-            <img src="/devie-wordmark-white.png" alt="De Vie" className="ho-logo" />
-          </a>
           <div className="relative" ref={wrap}>
             <button
               type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-haspopup="menu"
-              className="ho-switch"
+              aria-label={`De Vie apps${here ? `, you are in ${here.label}` : ""}`}
+              className="ho-brand ho-brandbtn"
             >
-              {here?.label ?? "Apps"}
+              <img src="/devie-wordmark-white.png" alt="" className="ho-logo" />
               <span aria-hidden className="ho-switch-caret">▾</span>
             </button>
             {open && (
@@ -66,7 +64,7 @@ export function AppHeader({ current }: { current: string }) {
           </div>
         </div>
         <PrimaryNav />
-        <HeaderWho />
+        <HeaderWho name={name} email={email} />
       </div>
     </header>
   );

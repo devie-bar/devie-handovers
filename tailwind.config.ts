@@ -14,21 +14,21 @@ const config: Config = {
     extend: {
       colors: {
         ink: {
-          DEFAULT: "#17201D",
-          soft: "#5C6B66",
-          muted: "#8B978F",
+          DEFAULT: "rgb(var(--c-ink) / <alpha-value>)",
+          soft: "rgb(var(--c-ink-soft) / <alpha-value>)",
+          muted: "rgb(var(--c-ink-muted) / <alpha-value>)",
         },
         paper: {
-          DEFAULT: "#FBFBF8",
-          card: "#FFFFFF",
-          line: "#E6E8E2",
+          DEFAULT: "rgb(var(--c-paper) / <alpha-value>)",
+          card: "rgb(var(--c-card) / <alpha-value>)",
+          line: "rgb(var(--c-line) / <alpha-value>)",
         },
         // Primary structural colour. White on brand is 8.0:1, so every
         // existing text-white on bg-brand pairing stays AA.
         brand: {
           DEFAULT: "#025B4C",
           soft: "#0B7A63",
-          wash: "#E8F0EE",
+          wash: "rgb(var(--c-wash) / <alpha-value>)",
           deep: "#013D33",
         },
         // Action fill and rules. Copper is a FILL, never body text:
@@ -39,10 +39,10 @@ const config: Config = {
           deep: "#B24700",
           soft: "#F0B37A",
         },
-        good: { DEFAULT: "#1E7A57", tint: "#E5F2EC", line: "#BFE0CD" },
-        warn: { DEFAULT: "#A9781A", tint: "#F6ECCF", line: "#E3D3AD" },
-        danger: { DEFAULT: "#C0392B", tint: "#F7E1DE", line: "#E0B8B2" },
-        info: { DEFAULT: "#1D5FA8", tint: "#E6EEFA", line: "#C2D5F0" },
+        good: { DEFAULT: "rgb(var(--c-good) / <alpha-value>)", tint: "rgb(var(--c-good-tint) / <alpha-value>)", line: "rgb(var(--c-good-line) / <alpha-value>)" },
+        warn: { DEFAULT: "rgb(var(--c-warn) / <alpha-value>)", tint: "rgb(var(--c-warn-tint) / <alpha-value>)", line: "rgb(var(--c-warn-line) / <alpha-value>)" },
+        danger: { DEFAULT: "rgb(var(--c-danger) / <alpha-value>)", tint: "rgb(var(--c-danger-tint) / <alpha-value>)", line: "rgb(var(--c-danger-line) / <alpha-value>)" },
+        info: { DEFAULT: "rgb(var(--c-info) / <alpha-value>)", tint: "rgb(var(--c-info-tint) / <alpha-value>)", line: "rgb(var(--c-info-line) / <alpha-value>)" },
       },
       fontFamily: {
         sans: ["Epilogue", "Segoe UI", "system-ui", "-apple-system", "Roboto", "Helvetica", "Arial", "sans-serif"],

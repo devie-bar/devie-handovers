@@ -22,11 +22,12 @@
 
 :root {
   color-scheme: light;
+  --c-ink:23 32 29; --c-ink-soft:92 107 102; --c-ink-muted:139 151 143; --c-paper:251 251 248; --c-card:255 255 255; --c-line:230 232 226; --c-wash:232 240 238; --c-good:30 122 87; --c-good-tint:229 242 236; --c-good-line:191 224 205; --c-warn:169 120 26; --c-warn-tint:246 236 207; --c-warn-line:227 211 173; --c-danger:192 57 43; --c-danger-tint:247 225 222; --c-danger-line:224 184 178; --c-info:29 95 168; --c-info-tint:230 238 250; --c-info-line:194 213 240;
 }
 
 body {
-  background-color: #FBFBF8;
-  color: #17201D;
+  background-color: rgb(var(--c-paper));
+  color: rgb(var(--c-ink));
   -webkit-font-smoothing: antialiased;
 }
 
@@ -92,6 +93,8 @@ body {
 :where(.ho-app) .ho-brandrow{display:flex;align-items:center;gap:12px;min-width:0}
 :where(.ho-app) .ho-brand{display:block;flex:none;line-height:0}
 :where(.ho-app) .ho-brand:hover{opacity:.72}
+:where(.ho-app) .ho-brandbtn{display:flex;align-items:center;gap:8px;min-height:var(--ctl);background:none;border:0;padding:0;color:#fff;cursor:pointer;line-height:0}
+:where(.ho-app) .ho-brandbtn .ho-switch-caret{line-height:1;font-size:12px}
 :where(.ho-app) .ho-logo{height:36px;width:auto;display:block}
 :where(.ho-app) .ho-switch{display:flex;align-items:center;gap:6px;min-height:var(--ctl);padding:0 8px;background:none;border:0;color:#fff;font-size:14px;font-weight:500;white-space:nowrap}
 :where(.ho-app) .ho-switch-caret{color:rgba(255,255,255,.7)}
@@ -140,6 +143,12 @@ body {
 :where(.ho-app) .ho-um-hd span{display:block;font-size:11px;color:var(--dv-ink-soft);overflow:hidden;text-overflow:ellipsis}
 :where(.ho-app) .ho-um-item{display:flex;align-items:center;width:100%;min-height:var(--ctl);padding:0 10px;background:transparent;border:0;border-radius:var(--dv-radius-inner);color:var(--dv-ink);font-family:inherit;font-size:13px;text-align:left;cursor:pointer}
 :where(.ho-app) .ho-um-item:hover{background:var(--dv-line)}
+:where(.ho-app) .ho-um-row{justify-content:space-between}
+:where(.ho-app) .ho-um-sep{height:1px;background:var(--dv-line);margin:6px 0}
+:where(.ho-app) .ho-um-sw{width:38px;height:22px;border-radius:999px;background:var(--dv-line);border:1px solid var(--dv-ink-soft);position:relative;flex:none;transition:background .15s}
+:where(.ho-app) .ho-um-sw.on{background:var(--dv-green-2);border-color:var(--dv-green-2)}
+:where(.ho-app) .ho-um-sw i{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+:where(.ho-app) .ho-um-sw.on i{left:18px}
 :where(.ho-app) .ho-wrap{max-width:1280px;margin:0 auto;padding:32px var(--gutter) calc(96px + env(safe-area-inset-bottom,0px))}
 @media (min-width:840px){
   :where(.ho-app) .ho-wrap{padding-top:48px}
@@ -406,3 +415,10 @@ body {
    per the DESIGN.md shadow rule). It stays in the page flow after Maintenance, so nothing is hidden behind it at the end. */
 :where(.ho-app) .ho-commitmod{position:sticky;bottom:0;z-index:10;box-shadow:0 -6px 20px rgba(2,91,76,.07);padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
 @media (max-width:599.98px){:where(.ho-app) .ho-commitmod{padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
+
+/* Dark mode (De Vie palette: petrol teal on charcoal). One switch in the account menu; same key in every app. */
+html[data-theme="dark"]{color-scheme:dark;--c-ink:231 236 238; --c-ink-soft:148 163 172; --c-ink-muted:120 134 143; --c-paper:15 20 23; --c-card:22 30 34; --c-line:42 53 59; --c-wash:29 38 43; --c-good:74 192 141; --c-good-tint:16 40 31; --c-good-line:44 94 66; --c-warn:227 160 58; --c-warn-tint:43 34 16; --c-warn-line:94 74 36; --c-danger:235 120 108; --c-danger-tint:48 24 22; --c-danger-line:94 44 40; --c-info:110 168 230; --c-info-tint:17 33 51; --c-info-line:40 70 110;}
+html[data-theme="dark"] .text-brand,html[data-theme="dark"] .text-brand-deep{color:#71C3C4}
+html[data-theme="dark"] .bg-brand-wash .text-brand{color:#71C3C4}
+html[data-theme="dark"]{--dv-paper:#0F1417;--dv-surface:#161E22;--dv-ink:#E7ECEE;--dv-ink-soft:#94A3AC;--dv-line:#2A353B;--dv-wash:#1D262B;--dv-skeleton:#1D262B;--dv-skeleton-high:#26323A;--dv-copper-deep:#F0B37A;--dv-good:#4AC08D;--dv-good-tint:#10281F;--dv-good-line:#2C5E42;--dv-warn:#E3A03A;--dv-warn-tint:#2B2210;--dv-warn-line:#5E4A24;--dv-danger:#EB786C;--dv-danger-tint:#301816;--dv-danger-line:#5E2C28;--dv-info:#6EA8E6;--dv-info-tint:#112133;--dv-info-line:#28466E}
+/* --dv-ink doubles as a fill in places; the green strip keeps its own white text */

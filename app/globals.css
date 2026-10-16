@@ -244,6 +244,9 @@ body {
 :where(.ho-app) .ho-btn:hover{background:var(--dv-wash)}
 :where(.ho-app) .ho-btn.ho-primary{background:var(--dv-copper);border-color:var(--dv-copper);color:var(--dv-ink)}
 :where(.ho-app) .ho-btn.ho-primary:hover{background:var(--dv-copper-soft)}
+/* Secondary action (DESIGN.md): solid green with white text, 8.0:1. Hover uses --dv-green-2; disabled dims like the other buttons. */
+:where(.ho-app) .ho-btn.ho-green{background:var(--dv-green);border-color:var(--dv-green);color:#fff}
+:where(.ho-app) .ho-btn.ho-green:hover:not([disabled]){background:var(--dv-green-2);border-color:var(--dv-green-2)}
 :where(.ho-app) .ho-btn.ho-quiet{border-color:transparent;background:none;color:var(--dv-ink-soft)}
 :where(.ho-app) .ho-btn.ho-sm{min-height:32px;padding:0 12px;font-size:13.5px}
 @media (max-width:839.98px){

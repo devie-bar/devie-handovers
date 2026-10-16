@@ -298,6 +298,14 @@ export function TonightView() {
     toast("Draft saved.");
   }
 
+  // What still blocks Publish: the handover author, and a reporter for Prep / MEP, each room that is not closed, and Kitchen.
+  const missing = [
+    ...(author ? [] : ["handover author"]),
+    ...(prep.by ? [] : ["Prep / MEP reporter"]),
+    ...states.filter((s) => !s.closed && !s.by).map((s) => `${cap(s.k)} reporter`),
+    ...(kitchen.by ? [] : ["Kitchen reporter"]),
+  ];
+
   // Trimmed 85 / 86 strings for a log row, leaving out the empty ones.
   const statusPair = (k: SectionKey) => {
     const s = statusOf(k);
@@ -313,7 +321,7 @@ export function TonightView() {
   async function publish(e: React.FormEvent) {
     e.preventDefault();
     const mgr = author;
-    if (!mgr) { toast("Pick the handover author first."); document.getElementById("author")?.focus(); return; }
+    if (missing.length) { toast("Missing: " + missing.join(", ") + "."); return; }
     const sh = readShared();
     const rooms: Record<string, HandoverRoom> = {};
     states.forEach((s) => {
@@ -322,8 +330,9 @@ export function TonightView() {
     const openItems = items.filter((i) => i.status !== "done");
     const postedAt = new Date().toISOString();
     const totalCovers = Object.values(rooms).reduce((a, r) => a + (r.open ? r.covers || 0 : 0), 0);
-    if (kitchen.sent) rooms.kitchen = { notes: kitchen.r.notes || "", by: kitchen.r.by || "", ...statusPair("kitchen"), ...checkPair("kitchen", true) };
-    if (prep.sent) rooms.prep = { notes: prep.r.notes || "", by: prep.r.by || "", ...checkPair("prep", true) };
+    // Every report needs a reporter before publishing, so Kitchen and Prep go out with whoever is picked, submitted or not.
+    if (kitchen.sent || kitchen.by) rooms.kitchen = { notes: kitchen.notes.trim(), by: kitchen.by, ...statusPair("kitchen"), ...checkPair("kitchen", true) };
+    if (prep.sent || prep.by) rooms.prep = { notes: prep.notes.trim(), by: prep.by, ...checkPair("prep", true) };
     const row = {
       service_date: date, author: mgr, posted_at: postedAt,
       total_covers: totalCovers,
@@ -453,13 +462,6 @@ export function TonightView() {
             ) : (
               <button type="button" className="ho-btn ho-sm ho-quiet" onClick={() => setPickDate(true)}>Change date</button>
             )}
-          </div>
-          <div className="ho-author">
-            <label className="ho-caption" htmlFor="author">Handover author</label>
-            <select id="author" value={author} onChange={(e) => setAuthor(e.target.value)}>
-              <option value="">Select author</option>
-              {(author && !people.includes(author) ? [author, ...people] : people).map((p) => <option key={p}>{p}</option>)}
-            </select>
           </div>
           <button type="button" className="ho-btn ho-sm ho-green ho-pull" disabled={sqBusy} onClick={pullSquare}>Pull Sales</button>
         </section>
@@ -672,9 +674,16 @@ export function TonightView() {
               </span>
               <span className="ho-toast ho-body-s" aria-live="polite">{toastText}</span>
             </div>
+            <select id="author" className="ho-author" aria-label="Handover author" value={author} onChange={(e) => setAuthor(e.target.value)}>
+              <option value="">Select author</option>
+              {(author && !people.includes(author) ? [author, ...people] : people).map((p) => <option key={p}>{p}</option>)}
+            </select>
             <div className="ho-commit-btns">
               <button type="button" className="ho-btn ho-act" onClick={saveDraft}>Save draft</button>
-              <button type="submit" form="handover-form" className="ho-btn ho-act ho-primary" disabled={publishing}>{testMode ? "Publish (test to me)" : published ? "Publish again" : "Publish handover"}</button>
+              <div className="ho-pubwrap">
+              {missing.length > 0 && <span className="ho-caption ho-missing" role="status">Missing: {missing.join(", ")}</span>}
+              <button type="submit" form="handover-form" className="ho-btn ho-act ho-primary" disabled={publishing || missing.length > 0}>{testMode ? "Publish (test to me)" : published ? "Publish again" : "Publish handover"}</button>
+              </div>
             </div>
           </div>
         </section>

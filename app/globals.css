@@ -369,23 +369,24 @@ body {
   :where(.ho-app) .ho-skel i::after,:where(.ho-app) .ho-swap-in-r,:where(.ho-app) .ho-swap-in-l{animation:none}
 }
 
-/* The title row is a module without a label. From 840px up the heading group dissolves so its three items and the
-   author and Square button are five flex items, spread edge to edge on one centre line. Below that it is two rows. */
+/* The title row is a module without a label: the date heading with Change date inline beside it on the left (baseline
+   aligned, small gap), Pull Sales on the far right. */
 :where(.ho-app) .ho-head{display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap}
 :where(.ho-app) .ho-head h1{margin:0}
-:where(.ho-app) .ho-hl{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap}
-@media (min-width:840px){:where(.ho-app) .ho-hl{display:contents}}
-@media (max-width:839.98px){
-  :where(.ho-app) .ho-head .ho-hl{flex:1 1 100%}
-  :where(.ho-app) .ho-head .ho-author{flex:1 1 220px;margin-left:0}
-  :where(.ho-app) .ho-head .ho-author select{flex:1;min-width:0}
-  :where(.ho-app) .ho-head .ho-pull{flex:1 1 220px;justify-content:center;min-height:var(--ctl)}
-}
+:where(.ho-app) .ho-hl{display:flex;align-items:baseline;gap:4px 8px;flex-wrap:wrap;min-width:0}
 :where(.ho-app) .ho-quiet{background:none;border-color:transparent;color:var(--dv-ink-soft);padding:0 8px}
 
 :where(.ho-app) .ho-hl input[type=date]{min-height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 12px}
-:where(.ho-app) .ho-author{display:flex;align-items:center;gap:8px}
-:where(.ho-app) .ho-author select{height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 10px;min-width:160px}
+/* Handover author, in the sticky footer: same height as the Save and Publish buttons beside it. */
+:where(.ho-app) select.ho-author{height:38px;background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 10px;min-width:180px;font-size:13px}
+@media (max-width:839.98px){:where(.ho-app) select.ho-author{height:44px}}
+@media (max-width:599.98px){:where(.ho-app) select.ho-author{width:100%}}
+:where(.ho-app) .ho-pubwrap{display:flex;align-items:center;gap:12px}
+:where(.ho-app) .ho-missing{max-width:300px;text-align:right}
+@media (max-width:599.98px){
+  :where(.ho-app) .ho-pubwrap{flex-direction:column;align-items:stretch;gap:6px}
+  :where(.ho-app) .ho-missing{max-width:none;text-align:left}
+}
 :where(.ho-app) .ho-night{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px 24px}
 :where(.ho-app) .ho-night > div{display:grid;gap:2px;flex:0 0 auto}
 /* Weight chosen on purpose (DESIGN.md 2.3): the Ultralight default is too faint for the night's

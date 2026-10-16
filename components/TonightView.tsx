@@ -430,8 +430,6 @@ export function TonightView() {
           <button type="button" className="ho-btn ho-sm ho-pull" disabled={sqBusy} onClick={pullSquare}>Pull tonight&apos;s sales from Square</button>
         </div>
 
-        {renderUnit("prep", "Prep / MEP")}
-
         <section className="ho-module ho-mstack" aria-labelledby="ho-tonight-h">
           <div className="ho-secthead"><h2 className="ho-sectlabel" id="ho-tonight-h">Tonight</h2></div>
           <div className="ho-night">
@@ -480,6 +478,8 @@ export function TonightView() {
             </div>
           </div>
         </section>
+
+        {renderUnit("prep", "Prep / MEP")}
 
         <section className="ho-module" aria-labelledby="ho-rooms-h">
           <div className="ho-secthead">

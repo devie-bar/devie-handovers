@@ -8,6 +8,8 @@ export interface HandoversUser {
   displayName: string;
   /** Anyone with a row in public.profiles may use Handovers. */
   hasAccess: boolean;
+  /** profiles.role = 'admin' and active: may edit the nightly checklists. */
+  isAdmin: boolean;
 }
 
 // Same Supabase project, login and middleware as the dashboard. The dashboard
@@ -22,7 +24,7 @@ export async function getHandoversUser(): Promise<HandoversUser | null> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("email, full_name")
+    .select("email, full_name, role, status")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -35,5 +37,6 @@ export async function getHandoversUser(): Promise<HandoversUser | null> {
     fullName,
     displayName: (fullName && fullName.trim()) || local || "Someone",
     hasAccess: !!profile,
+    isAdmin: profile?.role === "admin" && (profile?.status ?? "active") === "active",
   };
 }

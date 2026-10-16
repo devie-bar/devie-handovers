@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { serviceDateNow } from "@/lib/paris";
 import { getCurrentMenu, type CurrentMenu } from "@/lib/menu";
 import type { StockCounts } from "@/lib/stock";
-import { PEOPLE, type MaintenanceItem, type MaintenanceStatus } from "@/lib/types";
+import { PEOPLE, type ChecklistItem, type MaintenanceItem, type MaintenanceStatus, type SectionKey } from "@/lib/types";
 
 type LiveStatus = "Connecting" | "Live" | "Error" | "Not loaded";
 
@@ -28,6 +28,14 @@ interface Ctx {
   stock: StockCounts | null;
   stockFailed: string | null;
   retryStock: () => void;
+  isAdmin: boolean;
+  checklist: ChecklistItem[];
+  checklistFailed: string | null;
+  retryChecklist: () => void;
+  addChecklistItem: (section: SectionKey, label: string) => Promise<string | null>;
+  renameChecklistItem: (id: string, label: string) => Promise<string | null>;
+  moveChecklistItem: (id: string, dir: -1 | 1) => Promise<string | null>;
+  deactivateChecklistItem: (id: string) => Promise<string | null>;
   addItem: (title: string, location: string) => Promise<string | null>;
   setItemStatus: (it: MaintenanceItem, status: MaintenanceStatus) => Promise<string | null>;
   addUpdate: (it: MaintenanceItem, text: string) => Promise<string | null>;
@@ -46,7 +54,7 @@ function resolveMe(name: string): string {
   return PEOPLE.find((p) => p.toLowerCase() === first) ?? name;
 }
 
-export function HandoversProvider({ displayName, children }: { displayName: string; children: React.ReactNode }) {
+export function HandoversProvider({ displayName, isAdmin, children }: { displayName: string; isAdmin: boolean; children: React.ReactNode }) {
   const supabase = useMemo(() => createClient(), []);
   const me = useMemo(() => resolveMe(displayName), [displayName]);
   const people = useMemo(() => (PEOPLE.includes(me) ? PEOPLE : [me, ...PEOPLE]), [me]);
@@ -78,6 +86,59 @@ export function HandoversProvider({ displayName, children }: { displayName: stri
       .catch(() => setStockFailed("It took too long or the connection dropped."));
   }, []);
   useEffect(() => { retryStock(); }, [retryStock]);
+
+  // Nightly checklist items. Small, so any change (here or on another phone) just reloads the lot.
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+  const [checklistFailed, setChecklistFailed] = useState<string | null>(null);
+  const loadChecklist = useCallback(async () => {
+    const { data, error } = await supabase.from("handover_checklists").select("*").order("sort", { ascending: true }).order("created_at", { ascending: true });
+    if (error) { setChecklistFailed(error.message); return; }
+    setChecklistFailed(null);
+    setChecklist((data || []) as ChecklistItem[]);
+  }, [supabase]);
+  useEffect(() => {
+    loadChecklist();
+    const ch = supabase
+      .channel("handover-checklists")
+      .on("postgres_changes", { event: "*", schema: "public", table: "handover_checklists" }, () => { loadChecklist(); })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [supabase, loadChecklist]);
+  const activeOf = useCallback((section: string) => checklist.filter((i) => i.section === section && i.active).sort((a, b) => a.sort - b.sort), [checklist]);
+  const addChecklistItem = useCallback(async (section: SectionKey, label: string) => {
+    const sort = activeOf(section).reduce((m, i) => Math.max(m, i.sort), 0) + 1;
+    const { error } = await supabase.from("handover_checklists").insert({ section, label, sort });
+    if (error) return error.message;
+    await loadChecklist();
+    return null;
+  }, [supabase, activeOf, loadChecklist]);
+  const renameChecklistItem = useCallback(async (id: string, label: string) => {
+    const { error } = await supabase.from("handover_checklists").update({ label }).eq("id", id);
+    if (error) return error.message;
+    await loadChecklist();
+    return null;
+  }, [supabase, loadChecklist]);
+  const deactivateChecklistItem = useCallback(async (id: string) => {
+    const { error } = await supabase.from("handover_checklists").update({ active: false }).eq("id", id);
+    if (error) return error.message;
+    await loadChecklist();
+    return null;
+  }, [supabase, loadChecklist]);
+  // Swap with the neighbour, then renumber the section 1..n so equal sort values can never leave the order ambiguous.
+  const moveChecklistItem = useCallback(async (id: string, dir: -1 | 1) => {
+    const it = checklist.find((i) => i.id === id);
+    if (!it) return null;
+    const list = activeOf(it.section);
+    const at = list.findIndex((i) => i.id === id);
+    const to = at + dir;
+    if (at < 0 || to < 0 || to >= list.length) return null;
+    [list[at], list[to]] = [list[to], list[at]];
+    const changed = list.map((i, n) => ({ i, sort: n + 1 })).filter((x) => x.i.sort !== x.sort);
+    const res = await Promise.all(changed.map((x) => supabase.from("handover_checklists").update({ sort: x.sort }).eq("id", x.i.id)));
+    const bad = res.find((r) => r.error);
+    await loadChecklist();
+    return bad?.error ? bad.error.message : null;
+  }, [supabase, checklist, activeOf, loadChecklist]);
 
   // The handover author is never prefilled or remembered: each handover, someone picks themselves.
   const setAuthor = useCallback((a: string) => setAuthorState(a), []);
@@ -169,7 +230,8 @@ export function HandoversProvider({ displayName, children }: { displayName: stri
 
   const value: Ctx = {
     supabase, me, people, author, setAuthor, items, loaded, failed, status,
-    filter, setFilter, menu, menuFailed, retryMenu, stock, stockFailed, retryStock, addItem, setItemStatus, addUpdate,
+    filter, setFilter, menu, menuFailed, retryMenu, stock, stockFailed, retryStock,
+    isAdmin, checklist, checklistFailed, retryChecklist: loadChecklist, addChecklistItem, renameChecklistItem, moveChecklistItem, deactivateChecklistItem, addItem, setItemStatus, addUpdate,
   };
   return <C.Provider value={value}>{children}</C.Provider>;
 }

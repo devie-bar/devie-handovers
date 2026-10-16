@@ -15,6 +15,8 @@ export interface RoomPart {
   /** 85 and 86 for this room's list: menu names joined ", " on the first line, free text lines after. */
   low?: string;
   out?: string;
+  /** Ids of the checklist items ticked on this night. */
+  checks?: string[];
 }
 
 export interface Shared {
@@ -48,6 +50,9 @@ export interface SquareSummary {
   top: { name: string; qty: number; gross: number }[];
 }
 
+/** One line of a section's nightly checklist (public.handover_checklists). */
+export interface ChecklistItem { id: string; section: SectionKey; label: string; sort: number; active: boolean }
+
 export interface DraftRow {
   service_date: string;
   status: "draft" | "published";
@@ -62,7 +67,7 @@ export interface DraftRow {
   updated_at?: string;
 }
 
-export interface HandoverRoom { open?: boolean; covers?: number; notes?: string; by?: string; low?: string; out?: string }
+export interface HandoverRoom { open?: boolean; covers?: number; notes?: string; by?: string; low?: string; out?: string; checks?: string[]; /** Labels of the active items left unticked when it was published. */ notDone?: string[] }
 
 export interface HandoverRow {
   service_date: string;

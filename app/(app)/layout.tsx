@@ -28,7 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <>
       <div className="ho-app">
-        <HandoversProvider displayName={user.displayName}>
+        <HandoversProvider displayName={user.displayName} isAdmin={user.isAdmin}>
           {/* DESIGN.md 3.1, 3.7, 3.8: one sticky green strip carrying wordmark, estate switcher, sections and account */}
           <AppHeader current="handovers" name={user.displayName} email={user.email} />
           <div className="ho-wrap">

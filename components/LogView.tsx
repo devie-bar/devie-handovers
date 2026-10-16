@@ -7,13 +7,14 @@ import { eur, fmtDate, lines, longDate } from "@/lib/format";
 import { ROOMS, type HandoverRow } from "@/lib/types";
 
 // A room's 85s and 86s as red / orange chips, each omitted when empty.
-function Stock({ x }: { x: { low?: string; out?: string } }) {
-  const l = lines(x.low || ""), o = lines(x.out || "");
-  if (!l.length && !o.length) return null;
+function Stock({ x }: { x: { low?: string; out?: string; notDone?: string[] } }) {
+  const l = lines(x.low || ""), o = lines(x.out || ""), nd = x.notDone || [];
+  if (!l.length && !o.length && !nd.length) return null;
   return (
     <div className="ho-rstock">
       {l.length ? <div className="ho-stock ho-s85"><b>85</b>{l.map((n, i) => <span key={i}>{n}</span>)}</div> : null}
       {o.length ? <div className="ho-stock ho-s86"><b>86</b>{o.map((n, i) => <span key={i}>{n}</span>)}</div> : null}
+      {nd.length ? <div className="ho-stock ho-snd"><b>Not done</b>{nd.map((n, i) => <span key={i}>{n}</span>)}</div> : null}
     </div>
   );
 }
@@ -90,6 +91,7 @@ export function LogView() {
                     <h3>Prep / MEP</h3>
                     <span className="ho-n ho-num">{r.prep.by ? "Reported by " + r.prep.by : "Reported"}</span>
                     {r.prep.notes ? <p>{r.prep.notes}</p> : null}
+                    <Stock x={r.prep} />
                   </div>
                 ) : null}
                 <div className="ho-rms">

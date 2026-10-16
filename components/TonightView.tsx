@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useHandovers } from "@/components/HandoversProvider";
 import { MenuStatusList, type StatusGroup } from "@/components/MenuChips";
+import { Checklist } from "@/components/Checklist";
 import { groupNames } from "@/lib/menu";
 import { MaintenancePanel } from "@/components/MaintenancePanel";
 import { cap, eur, lines } from "@/lib/format";
@@ -49,11 +50,11 @@ function normalise(row: DraftRow): DraftRow {
 function seedFromHandover(prev: HandoverRow): DraftRow {
   const d = blankDraft(prev.service_date);
   const rooms = {} as Record<SectionKey, RoomPart>;
-  if (prev.rooms?.kitchen) rooms.kitchen = { by: prev.rooms.kitchen.by || "", notes: prev.rooms.kitchen.notes || "", low: prev.rooms.kitchen.low || "", out: prev.rooms.kitchen.out || "", submittedAt: prev.posted_at };
-  if (prev.rooms?.prep) rooms.prep = { by: prev.rooms.prep.by || "", notes: prev.rooms.prep.notes || "", submittedAt: prev.posted_at };
+  if (prev.rooms?.kitchen) rooms.kitchen = { by: prev.rooms.kitchen.by || "", notes: prev.rooms.kitchen.notes || "", low: prev.rooms.kitchen.low || "", out: prev.rooms.kitchen.out || "", checks: prev.rooms.kitchen.checks || [], submittedAt: prev.posted_at };
+  if (prev.rooms?.prep) rooms.prep = { by: prev.rooms.prep.by || "", notes: prev.rooms.prep.notes || "", checks: prev.rooms.prep.checks || [], submittedAt: prev.posted_at };
   ROOM_KEYS.forEach((k) => {
     const x: HandoverRoom = prev.rooms?.[k] || {};
-    rooms[k] = { by: prev.author || "", covers: x.covers || 0, notes: x.notes || "", closed: x.open === false, low: x.low || "", out: x.out || "", submittedAt: prev.posted_at };
+    rooms[k] = { by: prev.author || "", covers: x.covers || 0, notes: x.notes || "", closed: x.open === false, low: x.low || "", out: x.out || "", checks: x.checks || [], submittedAt: prev.posted_at };
   });
   return {
     ...d, status: "published", published_by: prev.author, published_at: prev.posted_at, rooms,
@@ -72,10 +73,10 @@ function dateTitle(d: string): string {
   return new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" }).format(new Date(Date.UTC(y, m - 1, day)));
 }
 
-type Edit = { by?: string; covers?: string; notes?: string; low?: string; out?: string };
+type Edit = { by?: string; covers?: string; notes?: string; low?: string; out?: string; checks?: string[] };
 
 export function TonightView() {
-  const { supabase, people, author, setAuthor, items, addItem, menu, menuFailed, retryMenu, stock, stockFailed, retryStock } = useHandovers();
+  const { supabase, people, author, setAuthor, items, addItem, checklist, menu, menuFailed, retryMenu, stock, stockFailed, retryStock } = useHandovers();
   const [date, setDate] = useState(serviceDateNow());
   const [draft, setDraft] = useState<DraftRow>(() => blankDraft(serviceDateNow()));
   const [edits, setEdits] = useState<Partial<Record<SectionKey, Edit>>>({});
@@ -169,6 +170,27 @@ export function TonightView() {
 
   // The 85 and 86 strings of one section: this person's unsaved typing over what the draft holds.
   const statusOf = (k: SectionKey) => ({ low: edits[k]?.low ?? (draft.rooms[k]?.low || ""), out: edits[k]?.out ?? (draft.rooms[k]?.out || "") });
+
+  // Ticked checklist ids for a section tonight: this person's just-made tick over what the draft holds.
+  const checksOf = (k: SectionKey): string[] => edits[k]?.checks ?? draft.rooms[k]?.checks ?? [];
+  // Saved at once, like 85 / 86, so other phones see the tick. The local copy is dropped once saved unless it moved on.
+  async function changeChecks(k: SectionKey, ids: string[]) {
+    setEdit(k, { checks: ids });
+    try {
+      await patchRoom(k, { checks: ids });
+      setEdits((cur) => {
+        const e = cur[k];
+        if (!e || e.checks !== ids) return cur;
+        const { checks: _c, ...keep } = e;
+        return { ...cur, [k]: keep };
+      });
+    } catch (err) { toast("Could not save the checklist: " + (err as Error).message); }
+  }
+  // Labels of the section's active items still unticked, for the log row.
+  const notDoneOf = (k: SectionKey): string[] => {
+    const t = checksOf(k);
+    return checklist.filter((i) => i.section === k && i.active && !t.includes(i.id)).sort((a, b) => a.sort - b.sort).map((i) => i.label);
+  };
 
   const states = ROOM_KEYS.map((k) => ({ k, ...view(k) }));
   const openRooms = states.filter((s) => !s.closed);
@@ -282,6 +304,12 @@ export function TonightView() {
     return { ...(s.low.trim() ? { low: s.low.trim() } : {}), ...(s.out.trim() ? { out: s.out.trim() } : {}) };
   };
 
+  // The night's ticks and a snapshot of what was left undone (labels), so the log and Slack do not depend on the live list.
+  const checkPair = (k: SectionKey, open: boolean) => {
+    const ids = checksOf(k);
+    return { ...(ids.length ? { checks: ids } : {}), ...(open && notDoneOf(k).length ? { notDone: notDoneOf(k) } : {}) };
+  };
+
   async function publish(e: React.FormEvent) {
     e.preventDefault();
     const mgr = author;
@@ -289,13 +317,13 @@ export function TonightView() {
     const sh = readShared();
     const rooms: Record<string, HandoverRoom> = {};
     states.forEach((s) => {
-      rooms[s.k] = { open: !s.closed, covers: s.num, notes: s.notes, by: edits[s.k]?.by ?? s.r.by ?? "", ...statusPair(s.k) };
+      rooms[s.k] = { open: !s.closed, covers: s.num, notes: s.notes, by: edits[s.k]?.by ?? s.r.by ?? "", ...statusPair(s.k), ...checkPair(s.k, !s.closed) };
     });
     const openItems = items.filter((i) => i.status !== "done");
     const postedAt = new Date().toISOString();
     const totalCovers = Object.values(rooms).reduce((a, r) => a + (r.open ? r.covers || 0 : 0), 0);
-    if (kitchen.sent) rooms.kitchen = { notes: kitchen.r.notes || "", by: kitchen.r.by || "", ...statusPair("kitchen") };
-    if (prep.sent) rooms.prep = { notes: prep.r.notes || "", by: prep.r.by || "" };
+    if (kitchen.sent) rooms.kitchen = { notes: kitchen.r.notes || "", by: kitchen.r.by || "", ...statusPair("kitchen"), ...checkPair("kitchen", true) };
+    if (prep.sent) rooms.prep = { notes: prep.r.notes || "", by: prep.r.by || "", ...checkPair("prep", true) };
     const row = {
       service_date: date, author: mgr, posted_at: postedAt,
       total_covers: totalCovers,
@@ -345,6 +373,10 @@ export function TonightView() {
     );
   };
 
+  const renderChecklist = (k: SectionKey, title: string) => (
+    <Checklist section={k} title={title} ticked={checksOf(k)} onChange={(ids) => changeChecks(k, ids)} />
+  );
+
   // A collapsible report unit modelled on a room, minus covers and the Closed box (kitchen, prep / MEP).
   const renderUnit = (k: Unit, title: string) => {
     const u = unitState(k);
@@ -366,6 +398,7 @@ export function TonightView() {
         </div>
         <div className="ho-rbody" id={`room-${k}`} role="region" aria-labelledby={`rh-${k}`}>
           <div className="ho-rin">
+            <div className="ho-lt">
             <div className="ho-r2">
               <div className="ho-by">
                 <label className="ho-caption" htmlFor={`by-${k}`}>Reported by</label>
@@ -379,6 +412,9 @@ export function TonightView() {
               placeholder={`Notes for ${title}`} aria-label={`${title} notes`} value={u.notes}
               onChange={(e) => setEdit(k, { notes: e.target.value })}
             />
+            </div>
+            {renderChecklist(k, title)}
+            <div className="ho-lb">
             {k === "kitchen" && renderStatus(k)}
             <div className="ho-sub">
               <button type="button" className="ho-btn ho-sm ho-primary" onClick={() => submitUnit(k, title)}>
@@ -387,6 +423,7 @@ export function TonightView() {
               <span className="ho-stamp">
                 {u.sent ? `Submitted by ${u.r.by || "someone"} at ${timeHM(u.r.submittedAt as string)}` : ""}
               </span>
+            </div>
             </div>
           </div>
         </div>
@@ -516,6 +553,7 @@ export function TonightView() {
                   </div>
                   <div className="ho-rbody" id={`room-${k}`} role="region" aria-labelledby={`rh-${k}`}>
                     <div className="ho-rin">
+                      <div className="ho-lt">
                       <div className="ho-r2">
                         <div className="ho-by">
                           <label className="ho-caption" htmlFor={`by-${k}`}>Reported by</label>
@@ -545,6 +583,9 @@ export function TonightView() {
                         placeholder={`Notes for ${name}`} aria-label={`${name} notes`} value={s.notes}
                         onChange={(e) => setEdit(k, { notes: e.target.value })}
                       />
+                      </div>
+                      {renderChecklist(k, name)}
+                      <div className="ho-lb">
                       {k !== "autumn" && renderStatus(k)}
                       <div className="ho-sub">
                         <button type="button" className="ho-btn ho-sm ho-primary" onClick={() => submitRoom(k)}>
@@ -553,6 +594,7 @@ export function TonightView() {
                         <span className="ho-stamp">
                           {r.submittedAt ? `Submitted by ${r.by || "someone"} at ${timeHM(r.submittedAt)}` : ""}
                         </span>
+                      </div>
                       </div>
                     </div>
                   </div>

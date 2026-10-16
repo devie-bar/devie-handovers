@@ -29,6 +29,8 @@ export function slackText(h: HandoverRow, openItems: MaintenanceItem[], link: st
     ...(nonEmpty(x.low).length ? [sub(`85: ${nonEmpty(x.low).join(", ")}`)] : []),
     ...(nonEmpty(x.out).length ? [sub(`86: ${nonEmpty(x.out).join(", ")}`)] : []),
   ];
+  // "◦ Not done: label, label" for the active checklist items left unticked, omitted when there are none.
+  const notDoneSub = (x: { notDone?: string[] }) => (x.notDone && x.notDone.length ? [sub(`Not done: ${x.notDone.join(", ")}`)] : []);
   const room = (n: string) => {
     const k = n.toLowerCase() as "summer" | "spring" | "autumn";
     const x = rooms[k] || {};
@@ -38,11 +40,11 @@ export function slackText(h: HandoverRow, openItems: MaintenanceItem[], link: st
     const sr = h.square?.rooms?.[k];
     const sales = sr ? ` · ${eur(sr.gross)} (${sr.tables} table${sr.tables === 1 ? "" : "s"})` : "";
     const head = top(`${name} · ${x.covers || 0} covers${bk && bk.covers > 0 ? ` (${bk.covers} booked)` : ""}${sales}${x.by ? ` · reported by ${mention(x.by, ids)}` : ""}`);
-    return [head, ...nonEmpty(x.notes).map(sub), ...stockSubs(x)].join("\n");
+    return [head, ...nonEmpty(x.notes).map(sub), ...stockSubs(x), ...notDoneSub(x)].join("\n");
   };
-  const unit = (title: string, u?: { by?: string; notes?: string; low?: string; out?: string }, withStock = false) =>
-    u && (u.by || nonEmpty(u.notes).length || (withStock && stockSubs(u).length))
-      ? [top(`${title}${u.by ? ` · reported by ${mention(u.by, ids)}` : ""}`), ...nonEmpty(u.notes).map(sub), ...(withStock ? stockSubs(u) : [])]
+  const unit = (title: string, u?: { by?: string; notes?: string; low?: string; out?: string; notDone?: string[] }, withStock = false) =>
+    u && (u.by || nonEmpty(u.notes).length || (withStock && stockSubs(u).length) || notDoneSub(u).length)
+      ? [top(`${title}${u.by ? ` · reported by ${mention(u.by, ids)}` : ""}`), ...nonEmpty(u.notes).map(sub), ...(withStock ? stockSubs(u) : []), ...notDoneSub(u)]
       : [];
   const kitchen = unit("KITCHEN", rooms.kitchen, true);
   const prep = unit("PREP / MEP", rooms.prep);

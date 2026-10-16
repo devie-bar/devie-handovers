@@ -104,8 +104,10 @@ body {
 :where(.ho-app) .ho-tab{display:inline-flex;align-items:center;min-height:var(--ctl);background:none;border:0;border-bottom:2px solid transparent;font-family:var(--dv-display);font-size:19px;font-weight:200;letter-spacing:-.05em;text-transform:uppercase;text-decoration:none;line-height:1.1;color:var(--dv-copper-soft);padding:9px 11px;cursor:pointer}
 :where(.ho-app) .ho-tab.on{color:#fff;border-bottom-color:var(--dv-copper)}
 :where(.ho-app) .ho-tab:hover{color:#fff}
-:where(.ho-app) .ho-subnav{display:none;background:var(--dv-surface);border-bottom:2px solid var(--dv-copper)}
-@media (min-width:840px){:where(.ho-app) .ho-subnav{display:block}}
+:where(.ho-app) .ho-subnav{background:var(--dv-surface);border-bottom:2px solid var(--dv-copper)}
+/* Shown at every width: with Service the only green item it no longer collapses into the Menu button on a phone,
+   so this bar is the only way to Tonight, Log and Maintenance. 44px tabs below 840. */
+@media (max-width:839.98px){:where(.ho-app) .ho-subtab{min-height:44px;display:inline-flex;align-items:center;padding-top:0;padding-bottom:0}}
 :where(.ho-app) .ho-subnav-in{max-width:1100px;margin:0 auto;padding:0 var(--gutter);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 :where(.ho-app) .ho-subtab{font-family:var(--dv-display);font-weight:200;font-size:16px;letter-spacing:-.05em;text-transform:uppercase;color:var(--dv-ink-soft);text-decoration:none;padding:12px 12px;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;line-height:1.1}
 :where(.ho-app) .ho-subtab:hover{color:var(--dv-ink)}

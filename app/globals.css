@@ -103,6 +103,18 @@ body {
 :where(.ho-app) .ho-tab{display:inline-flex;align-items:center;min-height:var(--ctl);background:none;border:0;border-bottom:2px solid transparent;font-family:var(--dv-display);font-size:19px;font-weight:200;letter-spacing:-.05em;text-transform:uppercase;text-decoration:none;line-height:1.1;color:var(--dv-copper-soft);padding:9px 11px;cursor:pointer}
 :where(.ho-app) .ho-tab.on{color:#fff;border-bottom-color:var(--dv-copper)}
 :where(.ho-app) .ho-tab:hover{color:#fff}
+:where(.ho-app) .ho-navgroup{display:inline-flex;align-items:center}
+:where(.ho-app) .ho-navdrop{position:absolute;top:100%;left:50%;width:100%;max-width:1100px;background:var(--dv-surface);box-shadow:0 0 0 100vmax var(--dv-surface),0 14px 28px rgba(0,0,0,.28);clip-path:inset(0 -100vmax 0 -100vmax);border-bottom:2px solid var(--dv-copper);display:flex;flex-wrap:wrap;gap:2px 10px;padding:10px var(--gutter);opacity:0;visibility:hidden;transform:translate(-50%,-8px);transition:opacity .15s ease,transform .15s ease,visibility 0s linear .15s;z-index:60}
+:where(.ho-app) .ho-navdrop a{font-family:var(--dv-display);font-weight:200;font-size:16px;letter-spacing:-.05em;text-transform:uppercase;color:var(--dv-ink-soft);text-decoration:none;padding:8px 11px;white-space:nowrap;line-height:1.1}
+:where(.ho-app) .ho-navdrop a:hover,:where(.ho-app) .ho-navdrop a.on{color:var(--dv-copper-deep)}
+@media (max-width:839px),(hover:none){:where(.ho-app) .ho-navdrop{display:none}}
+:where(.ho-app) .ho-navgroup:hover .ho-navdrop,:where(.ho-app) .ho-navgroup:focus-within .ho-navdrop{opacity:1;visibility:visible;transform:translate(-50%,0);transition:opacity .15s ease,transform .15s ease,visibility 0s}
+:where(.ho-app) .ho-subnav{display:none;background:var(--dv-surface);border-bottom:2px solid var(--dv-copper)}
+@media (min-width:840px){:where(.ho-app) .ho-subnav{display:block}}
+:where(.ho-app) .ho-subnav-in{max-width:1100px;margin:0 auto;padding:0 var(--gutter);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+:where(.ho-app) .ho-subtab{font-family:var(--dv-display);font-weight:200;font-size:16px;letter-spacing:-.05em;text-transform:uppercase;color:var(--dv-ink-soft);text-decoration:none;padding:12px 12px;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;line-height:1.1}
+:where(.ho-app) .ho-subtab:hover{color:var(--dv-ink)}
+:where(.ho-app) .ho-subtab.on{color:var(--dv-copper-deep);border-bottom-color:var(--dv-copper)}
 @media (max-width:839px){:where(.ho-app) .ho-tab{padding:8px 14px;min-height:44px}}
 :where(.ho-app) .ho-navmeasure{position:absolute;left:0;right:0;top:0;height:0;overflow:hidden;visibility:hidden;pointer-events:none}
 :where(.ho-app) .ho-navmeasure .ho-toptabs{width:max-content;flex-wrap:nowrap}

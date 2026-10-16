@@ -7,27 +7,39 @@ import { useHandovers } from "@/components/HandoversProvider";
 import { SignOutButton } from "@/components/SignOutButton";
 
 /**
- * DESIGN.md pattern 3.1. Ported from the Liquid Library's TopNav
- * (devie-archive/components/Archive.jsx, "Top navigation"): the full bar is
- * justified between the wordmark and the account controls and is measured, not
- * a breakpoint. When it does not fit, it becomes one Menu button (two lines
- * that rotate into a cross) that drops the whole navigation down. The Library
- * also has hover sub-menus and an EN/FR toggle; Handovers has neither, so
- * those parts are not carried over. Keep the markup and the .ho-top styles in
- * app/globals.css in step with the Library's .dv-top styles.
+ * DESIGN.md pattern 3.1. Ported from the Liquid Library's TopNav: the full bar
+ * is justified between the wordmark and the account controls and is measured,
+ * not a breakpoint. When it does not fit, it becomes one Menu button that drops
+ * the whole navigation down. Two-tier: the green bar carries the top-level
+ * sections (Service, Maintenance); each section's pages sit in the cream
+ * secondary bar (SubNav) and preview in a hover flyout on desktop.
  */
-const NAV_FULL_GAP = 28; // .ho-top-in column gap in full mode; compact mode tightens it, so never read it live
+const NAV_FULL_GAP = 28; // .ho-top-in column gap in full mode
 
-const SECTIONS = [
-  { key: "tonight", label: "Tonight", href: "/" },
-  { key: "log", label: "Log", href: "/log" },
-  { key: "maintenance", label: "Maintenance", href: "/maintenance" },
+export type HoItem = { href: string; label: string };
+export type HoGroup = { key: string; label: string; items: HoItem[] };
+
+export const GROUPS: HoGroup[] = [
+  { key: "service", label: "Service", items: [
+    { href: "/", label: "Tonight" },
+    { href: "/log", label: "Log" },
+  ] },
+  { key: "maintenance", label: "Maintenance", items: [
+    { href: "/maintenance", label: "Maintenance" },
+  ] },
 ];
+export const ALL_PAGES: HoItem[] = GROUPS.flatMap((g) => g.items);
+
+export const isActiveHref = (pathname: string, href: string) =>
+  href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
+export const findActiveGroup = (pathname: string): HoGroup =>
+  GROUPS.find((g) => g.items.some((it) => isActiveHref(pathname, it.href))) || GROUPS[0];
 
 export function PrimaryNav() {
   const pathname = usePathname();
   const { status } = useHandovers();
-  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+  const isActive = (href: string) => isActiveHref(pathname, href);
+  const isGroupActive = (g: HoGroup) => g.items.some((it) => isActive(it.href));
   const measureRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const [compact, setCompact] = useState(false);
@@ -44,7 +56,6 @@ export function PrimaryNav() {
       const others = Array.from(host.children).filter(
         (c) => !c.classList.contains("ho-navslot") && getComputedStyle(c).position !== "absolute",
       ) as HTMLElement[];
-      // The full bar fills the column between the wordmark and the account controls.
       const room = inner - others.reduce((w, c) => w + c.offsetWidth, 0) - 2 * NAV_FULL_GAP;
       const next = measure.scrollWidth > room;
       setCompact(next);
@@ -89,15 +100,14 @@ export function PrimaryNav() {
           {menuOpen && (
             <nav id="ho-navpanel" className="ho-navpanel" aria-label="Handovers sections">
               <div className="ho-navpanel-in">
-                {SECTIONS.map((s) => (
+                {ALL_PAGES.map((s) => (
                   <Link
-                    key={s.key} href={s.href} className={"ho-navpanel-item" + (isActive(s.href) ? " on" : "")}
+                    key={s.href} href={s.href} className={"ho-navpanel-item" + (isActive(s.href) ? " on" : "")}
                     aria-current={isActive(s.href) ? "page" : undefined} onClick={() => setMenuOpen(false)}
                   >
                     {s.label}
                   </Link>
                 ))}
-                {/* The account controls leave the collapsed header, so they sit at the foot of the panel. */}
                 <div className="ho-navpanel-acct">
                   <span className="ho-st" aria-live="polite">{status}</span>
                   <SignOutButton className="ho-ctl" />
@@ -108,16 +118,25 @@ export function PrimaryNav() {
         </>
       ) : (
         <nav className="ho-toptabs ho-navslot" aria-label="Handovers sections">
-          {SECTIONS.map((s) => (
-            <Link key={s.key} href={s.href} className={"ho-tab" + (isActive(s.href) ? " on" : "")} aria-current={isActive(s.href) ? "page" : undefined}>
-              {s.label}
-            </Link>
+          {GROUPS.map((g) => (
+            <div className="ho-navgroup" key={g.key}>
+              <Link href={g.items[0].href} className={"ho-tab" + (isGroupActive(g) ? " on" : "")} aria-current={isGroupActive(g) ? "page" : undefined}>
+                {g.label}
+              </Link>
+              {g.items.length > 1 && (
+                <div className="ho-navdrop">
+                  {g.items.map((it) => (
+                    <Link key={it.href} href={it.href} className={isActive(it.href) ? "on" : undefined}>{it.label}</Link>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </nav>
       )}
       <div className="ho-navmeasure" aria-hidden="true">
         <div ref={measureRef} className="ho-toptabs">
-          {SECTIONS.map((s) => <span key={s.key} className="ho-tab">{s.label}</span>)}
+          {GROUPS.map((g) => <span key={g.key} className="ho-tab">{g.label}</span>)}
         </div>
       </div>
     </>

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ESTATE } from "@/lib/estate";
 import { HeaderWho } from "@/components/HeaderWho";
 import { PrimaryNav } from "@/components/PrimaryNav";
+import { SubNav } from "@/components/SubNav";
 
 /**
  * The one green strip (DESIGN.md 3.1, 3.7, 3.8): wordmark and estate switcher on the
@@ -29,6 +30,7 @@ export function AppHeader({ current, name, email }: { current: string; name: str
   }, [open]);
 
   return (
+    <>
     <header className="ho-top">
       <div className="ho-top-in">
         <div className="ho-brandrow">
@@ -67,5 +69,7 @@ export function AppHeader({ current, name, email }: { current: string; name: str
         <HeaderWho name={name} email={email} />
       </div>
     </header>
+    <SubNav />
+    </>
   );
 }

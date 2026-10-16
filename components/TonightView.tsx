@@ -407,7 +407,7 @@ export function TonightView() {
       )}
 
       <div className="ho-stack">
-        <div className="ho-head">
+        <section className="ho-module ho-head" aria-label="Night and handover author">
           <div className="ho-hl">
             <h1>{dateTitle(date)}</h1>
             {pickDate ? (
@@ -428,7 +428,7 @@ export function TonightView() {
             </select>
           </div>
           <button type="button" className="ho-btn ho-sm ho-pull" disabled={sqBusy} onClick={pullSquare}>Pull tonight&apos;s sales from Square</button>
-        </div>
+        </section>
 
         <section className="ho-module ho-mstack" aria-labelledby="ho-tonight-h">
           <div className="ho-secthead"><h2 className="ho-sectlabel" id="ho-tonight-h">Tonight</h2></div>

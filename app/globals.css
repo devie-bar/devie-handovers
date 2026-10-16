@@ -327,16 +327,23 @@ body {
   :where(.ho-app) .ho-skel i::after,:where(.ho-app) .ho-swap-in-r,:where(.ho-app) .ho-swap-in-l{animation:none}
 }
 
-:where(.ho-app) .ho-head{display:flex;align-items:baseline;gap:12px 24px;flex-wrap:wrap}
-:where(.ho-app) .ho-hl{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-:where(.ho-app) .ho-hl .ho-caption{margin-left:4px}
+/* The title row is a module without a label. From 840px up the heading group dissolves so its three items and the
+   author and Square button are five flex items, spread edge to edge on one centre line. Below that it is two rows. */
+:where(.ho-app) .ho-head{display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap}
+:where(.ho-app) .ho-head h1{margin:0}
+:where(.ho-app) .ho-hl{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap}
+@media (min-width:840px){:where(.ho-app) .ho-hl{display:contents}}
+@media (max-width:839.98px){
+  :where(.ho-app) .ho-head .ho-hl{flex:1 1 100%}
+  :where(.ho-app) .ho-head .ho-author{flex:1 1 220px;margin-left:0}
+  :where(.ho-app) .ho-head .ho-author select{flex:1;min-width:0}
+  :where(.ho-app) .ho-head .ho-pull{flex:1 1 220px;justify-content:center;min-height:var(--ctl)}
+}
 :where(.ho-app) .ho-quiet{background:none;border-color:transparent;color:var(--dv-ink-soft);padding:0 8px}
 
-@media (max-width:599.98px){:where(.ho-app) .ho-pull{width:100%;justify-content:center}}
 :where(.ho-app) .ho-hl input[type=date]{min-height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 12px}
-:where(.ho-app) .ho-author{display:flex;align-items:baseline;gap:8px;margin-left:auto}
+:where(.ho-app) .ho-author{display:flex;align-items:center;gap:8px}
 :where(.ho-app) .ho-author select{height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 10px;min-width:160px}
-@media (max-width:599.98px){:where(.ho-app) .ho-author{width:100%;margin-left:0}:where(.ho-app) .ho-author select{flex:1}}
 :where(.ho-app) .ho-night{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px 24px}
 :where(.ho-app) .ho-night > div{display:grid;gap:2px;flex:0 0 auto}
 /* Weight chosen on purpose (DESIGN.md 2.3): the Ultralight default is too faint for the night's

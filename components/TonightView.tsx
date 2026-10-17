@@ -619,11 +619,6 @@ export function TonightView() {
                           <span className="ho-caption">covers</span>
                         </div>
                         <span className="ho-sqhint">
-                          {s.bk
-                            ? `SevenRooms: ${s.bk.covers} covers booked on ${s.bk.reservations} reservation${s.bk.reservations === 1 ? "" : "s"}, as of ${booked?.asOf || "the afternoon summary"}. Correct it to what actually came in.`
-                            : booked && !s.closed ? "SevenRooms: nothing booked in this room, walk-ins only." : ""}
-                        </span>
-                        <span className="ho-sqhint">
                           {sqr && sqr.orders ? `Square: ${sqr.tables} table${sqr.tables === 1 ? "" : "s"}, ${sqr.orders} check${sqr.orders === 1 ? "" : "s"}, ${eur(sqr.gross)}` : ""}
                         </span>
                       </div>

@@ -20,9 +20,9 @@ const blankDraft = (d: string): DraftRow => ({
   service_date: d,
   status: "draft",
   rooms: {
-    summer: { by: "", covers: 0, notes: "", closed: false, submittedAt: null },
-    spring: { by: "", covers: 0, notes: "", closed: false, submittedAt: null },
-    autumn: { by: "", covers: 0, notes: "", closed: true, submittedAt: null },
+    summer: { by: "", covers: null, notes: "", closed: false, submittedAt: null },
+    spring: { by: "", covers: null, notes: "", closed: false, submittedAt: null },
+    autumn: { by: "", covers: null, notes: "", closed: true, submittedAt: null },
   },
   shared: { ...BLANK_SHARED },
   booked: null,
@@ -55,7 +55,7 @@ function seedFromHandover(prev: HandoverRow): DraftRow {
   if (prev.rooms?.prep) rooms.prep = { by: prev.rooms.prep.by || "", notes: prev.rooms.prep.notes || "", checks: prev.rooms.prep.checks || [], submittedAt: prev.posted_at };
   ROOM_KEYS.forEach((k) => {
     const x: HandoverRoom = prev.rooms?.[k] || {};
-    rooms[k] = { by: prev.author || "", covers: x.covers || 0, notes: x.notes || "", closed: x.open === false, low: x.low || "", out: x.out || "", checks: x.checks || [], submittedAt: prev.posted_at };
+    rooms[k] = { by: prev.author || "", covers: x.covers ?? null, notes: x.notes || "", closed: x.open === false, low: x.low || "", out: x.out || "", checks: x.checks || [], submittedAt: prev.posted_at };
   });
   return {
     ...d, status: "published", published_by: prev.author, published_at: prev.posted_at, rooms,
@@ -161,16 +161,19 @@ export function TonightView() {
   const view = (k: RoomKey) => {
     const r = draft.rooms[k] || {};
     const bk = booked?.rooms?.[k];
-    const closed = !!r.closed && !(bk && bk.reservations > 0 && !r.submittedAt && !r.closedByHand);
+    // The draft's Closed flag always wins; a SevenRooms booking never reopens a room.
+    const closed = !!r.closed;
     const e = edits[k] || {};
-    const storedCovers = r.covers || (!r.submittedAt && bk ? bk.covers : 0) || 0;
-    const covers = e.covers ?? (storedCovers ? String(storedCovers) : "");
+    // No prefill from SevenRooms: covers stay empty until someone types them, and the booked figure is only a hint.
+    // (A stored 0 on a room nobody has submitted is the old blank default, not a reported figure.)
+    const storedCovers = r.covers != null && (r.submittedAt || r.covers > 0) ? r.covers : null;
+    const covers = e.covers ?? (storedCovers != null ? String(storedCovers) : "");
     return {
       r, bk, closed,
       by: e.by ?? (r.by || ""),
       covers,
       notes: e.notes ?? (r.notes || ""),
-      num: Number(covers || 0),
+      num: covers.trim() === "" ? null : Number(covers),
       sent: !!r.submittedAt,
     };
   };
@@ -202,7 +205,7 @@ export function TonightView() {
   const states = ROOM_KEYS.map((k) => ({ k, ...view(k) }));
   const openRooms = states.filter((s) => !s.closed);
   const submittedCount = openRooms.filter((s) => s.sent).length;
-  const total = openRooms.reduce((a, s) => a + s.num, 0);
+  const total = openRooms.reduce((a, s) => a + (s.num ?? 0), 0);
 
   const setEdit = (k: SectionKey, p: Edit) => setEdits((cur) => ({ ...cur, [k]: { ...cur[k], ...p } }));
 
@@ -211,11 +214,20 @@ export function TonightView() {
   const clearOpen = (k: SectionKey) => setOpenOverride((cur) => { const n = { ...cur }; delete n[k]; return n; });
 
   async function patchRoom(k: SectionKey, part: RoomPart) {
-    const { data, error } = await supabase.from("handover_drafts").select("rooms").eq("service_date", date).single();
-    if (error) throw new Error(error.message);
-    const rooms = { ...(data.rooms || {}), [k]: { ...(data.rooms?.[k] || {}), ...part } };
-    const { error: e2 } = await supabase.from("handover_drafts").update({ rooms }).eq("service_date", date);
-    if (e2) throw new Error(e2.message);
+    // One atomic write in the database, so two phones saving different rooms never overwrite each other.
+    const rpc = await supabase.rpc("handover_patch_room", { p_date: date, p_room: k, p_part: part });
+    if (rpc.error) {
+      // Until the migration is applied the function does not exist (42883 from Postgres, PGRST202 from the API): use the old path.
+      const missing = rpc.error.code === "42883" || rpc.error.code === "PGRST202";
+      if (!missing) throw new Error(rpc.error.message);
+      const { data, error } = await supabase.from("handover_drafts").select("rooms").eq("service_date", date).single();
+      if (error) throw new Error(error.message);
+      const rooms = { ...(data.rooms || {}), [k]: { ...(data.rooms?.[k] || {}), ...part } };
+      const { error: e2 } = await supabase.from("handover_drafts").update({ rooms }).eq("service_date", date);
+      if (e2) throw new Error(e2.message);
+    } else if (rpc.data == null) {
+      throw new Error("tonight's draft was not found");
+    }
     setDraft((d) => ({ ...d, rooms: { ...d.rooms, [k]: { ...d.rooms[k], ...part } } }));
   }
 
@@ -246,6 +258,7 @@ export function TonightView() {
   async function submitUnit(k: Unit, title: string) {
     const u = unitState(k);
     if (!u.by) { toast(`Pick who is reporting for ${title.toLowerCase()} before submitting.`); document.getElementById(`by-${k}`)?.focus(); return; }
+    if (u.r.submittedAt && u.r.by && u.r.by !== u.by && !window.confirm(`${title} was already submitted by ${u.r.by}. Replace it?`)) return;
     try {
       await patchRoom(k, { by: u.by, notes: u.notes.trim(), ...statusOf(k), submittedAt: new Date().toISOString() });
       clearOpen(k);
@@ -262,6 +275,7 @@ export function TonightView() {
   async function submitRoom(k: RoomKey) {
     const s = view(k);
     if (!s.by) { toast(`Pick who is reporting for ${k} before submitting.`); document.getElementById(`by-${k}`)?.focus(); return; }
+    if (s.r.submittedAt && s.r.by && s.r.by !== s.by && !window.confirm(`${cap(k)} was already submitted by ${s.r.by}. Replace it?`)) return;
     const part: RoomPart = { by: s.by, covers: s.num, notes: s.notes.trim(), closed: false, ...statusOf(k), submittedAt: new Date().toISOString() };
     try {
       await patchRoom(k, part);
@@ -356,7 +370,7 @@ export function TonightView() {
     });
     const openItems = items.filter((i) => i.status !== "done");
     const postedAt = new Date().toISOString();
-    const totalCovers = Object.values(rooms).reduce((a, r) => a + (r.open ? r.covers || 0 : 0), 0);
+    const totalCovers = Object.values(rooms).reduce((a, r) => a + (r.open && r.covers != null ? r.covers : 0), 0);
     // Every report needs a reporter before publishing, so Kitchen and Prep go out with whoever is picked, submitted or not.
     if (kitchen.sent || kitchen.by) rooms.kitchen = { notes: kitchen.notes.trim(), by: kitchen.by, ...statusPair("kitchen"), ...checkPair("kitchen", true) };
     if (prep.sent || prep.by) rooms.prep = { notes: prep.notes.trim(), by: prep.by, ...checkPair("prep", true) };
@@ -574,7 +588,7 @@ export function TonightView() {
               const summary = s.closed
                 ? "Closed"
                 : s.sent
-                  ? `${r.covers || 0} cover${r.covers === 1 ? "" : "s"}, reported by ${r.by || "someone"}, submitted ${timeHM(r.submittedAt as string)}`
+                  ? `${r.covers == null ? "covers not reported" : `${r.covers} cover${r.covers === 1 ? "" : "s"}`}, reported by ${r.by || "someone"}, submitted ${timeHM(r.submittedAt as string)}`
                   : "Not submitted yet" + (s.bk ? `, ${s.bk.covers} booked in SevenRooms` : "");
               return (
                 <div key={k} className={`ho-room ${s.closed ? "ho-off" : ""} ${s.sent ? "ho-sent" : ""} ${isOpen ? "ho-open" : ""}`}>
@@ -606,7 +620,7 @@ export function TonightView() {
                       <div className="ho-r2">
                         <div className="ho-cv">
                           <input
-                            type="number" min={0} inputMode="numeric" placeholder="0" className="ho-num"
+                            type="number" min={0} inputMode="numeric" placeholder={s.bk ? `${s.bk.covers} booked` : "0"} className="ho-num"
                             aria-label={`${name} covers`} value={s.covers}
                             onChange={(e) => setEdit(k, { covers: e.target.value })}
                           />

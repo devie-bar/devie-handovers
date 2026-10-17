@@ -7,7 +7,8 @@ export type SectionKey = RoomKey | "kitchen" | "prep";
 
 export interface RoomPart {
   by?: string;
-  covers?: number;
+  /** null (or absent) = nobody typed a figure: the room is reported as "not reported", never as 0. */
+  covers?: number | null;
   notes?: string;
   closed?: boolean;
   closedByHand?: boolean;
@@ -68,7 +69,7 @@ export interface DraftRow {
   updated_at?: string;
 }
 
-export interface HandoverRoom { open?: boolean; covers?: number; notes?: string; by?: string; low?: string; out?: string; checks?: string[]; /** Labels of the active items left unticked when it was published. */ notDone?: string[] }
+export interface HandoverRoom { open?: boolean; covers?: number | null; notes?: string; by?: string; low?: string; out?: string; checks?: string[]; /** Labels of the active items left unticked when it was published. */ notDone?: string[] }
 
 export interface HandoverRow {
   service_date: string;

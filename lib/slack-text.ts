@@ -39,7 +39,8 @@ export function slackText(h: HandoverRow, openItems: MaintenanceItem[], link: st
     const bk = h.booked?.rooms?.[k];
     const sr = h.square?.rooms?.[k];
     const sales = sr ? ` · ${eur(sr.gross)} (${sr.tables} table${sr.tables === 1 ? "" : "s"})` : "";
-    const head = top(`${name} · ${x.covers || 0} covers${bk && bk.covers > 0 ? ` (${bk.covers} booked)` : ""}${sales}${x.by ? ` · reported by ${mention(x.by, ids)}` : ""}`);
+    const figure = x.covers == null ? "not reported" : `${x.covers} covers${bk && bk.covers > 0 ? ` (${bk.covers} booked)` : ""}${sales}`;
+    const head = top(`${name} · ${figure}${x.by ? ` · reported by ${mention(x.by, ids)}` : ""}`);
     return [head, ...nonEmpty(x.notes).map(sub), ...stockSubs(x), ...notDoneSub(x)].join("\n");
   };
   const unit = (title: string, u?: { by?: string; notes?: string; low?: string; out?: string; notDone?: string[] }, withStock = false) =>

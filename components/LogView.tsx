@@ -102,7 +102,7 @@ export function LogView() {
                     ) : (
                       <div className="ho-rbox" key={n}>
                         <h3>{n}</h3>
-                        <span className="ho-n ho-num">{x.covers ?? 0} covers{x.by ? ", reported by " + x.by : ""}</span>
+                        <span className="ho-n ho-num">{x.covers == null ? "Covers not reported" : `${x.covers} covers`}{x.by ? ", reported by " + x.by : ""}</span>
                         {x.notes ? <p>{x.notes}</p> : null}
                         <Stock x={x} />
                       </div>

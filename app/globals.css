@@ -182,14 +182,13 @@ body {
 :where(.ho-app) .ho-room .ho-rh{cursor:pointer;min-height:var(--ctl)}
 :where(.ho-app) .ho-room .ho-rh{flex-wrap:wrap}
 :where(.ho-app) .ho-room .ho-rh h3{font-weight:400;flex:0 1 auto;min-width:0}
-/* Reporter select in the header, straight after the title; the Closed box and chevron are pushed to the far right. */
-:where(.ho-app) .ho-room .ho-hsel{flex:0 1 220px;min-width:140px;display:flex}
-:where(.ho-app) .ho-room .ho-hsel select{width:100%;min-height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 10px}
+/* Reporter select in the action row, side by side with Submit at the same height. */
+:where(.ho-app) .ho-room .ho-bysel{flex:0 1 200px;min-width:140px;height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 10px;font-size:13.5px}
 :where(.ho-app) .ho-room .ho-rh .ho-chev,:where(.ho-app) .ho-room .ho-rh label{margin-left:auto}
 :where(.ho-app) .ho-room .ho-rh label + .ho-chev{margin-left:0}
 /* Notes in a room body: a visible hairline box on white so it stands out from the module. */
 :where(.ho-app) .ho-room textarea{width:100%;min-height:72px;resize:vertical;background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:10px 16px}
-:where(.ho-app) .ho-room .ho-rtoggle{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;width:100%;min-height:var(--ctl);padding:4px 0;background:none;border:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
+:where(.ho-app) .ho-room .ho-rtoggle{display:flex;flex-direction:row;flex-wrap:wrap;align-items:baseline;justify-content:flex-start;gap:0 12px;width:100%;min-height:var(--ctl);padding:4px 0;background:none;border:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
 :where(.ho-app) .ho-room .ho-rname{font:inherit;font-weight:400}
 /* Room title: PP Editorial Regular (400) at Display S 21px, a weight chosen on purpose (DESIGN.md 2.3) so the
    module title reads against the Ultralight labels. The summary under it is Epilogue Body S, not the display face. */

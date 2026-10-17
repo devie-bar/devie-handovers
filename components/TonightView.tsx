@@ -442,12 +442,6 @@ export function TonightView() {
               </span>
             </button>
           </h3>
-          <span className="ho-hsel" onClick={(e) => e.stopPropagation()}>
-            <select id={`by-${k}`} aria-label={`${title} reporter`} value={u.by} onChange={(e) => setEdit(k, { by: e.target.value })}>
-              <option value="">Select reporter</option>
-              {(u.by && !people.includes(u.by) ? [u.by, ...people] : people).map((p) => <option key={p}>{p}</option>)}
-            </select>
-          </span>
           <svg className="ho-chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
             <path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -464,6 +458,10 @@ export function TonightView() {
             <div className="ho-lb">
             {k === "kitchen" && renderStatus(k)}
             <div className="ho-sub">
+              <select id={`by-${k}`} className="ho-bysel" aria-label={`${title} reporter`} value={u.by} onChange={(e) => setEdit(k, { by: e.target.value })}>
+                <option value="">Reporter</option>
+                {(u.by && !people.includes(u.by) ? [u.by, ...people] : people).map((p) => <option key={p}>{p}</option>)}
+              </select>
               <button type="button" className="ho-btn ho-sm ho-primary" onClick={() => submitUnit(k, title)}>
                 {(u.sent ? "Resubmit " : "Submit ") + title}
               </button>
@@ -599,14 +597,6 @@ export function TonightView() {
                         <span className="ho-body-s ho-rsum">{summary}</span>
                       </button>
                     </h3>
-                    {!s.closed && (
-                      <span className="ho-hsel" onClick={(e) => e.stopPropagation()}>
-                        <select id={`by-${k}`} aria-label={`${name} reporter`} value={s.by} onChange={(e) => setEdit(k, { by: e.target.value })}>
-                          <option value="">Select reporter</option>
-                          {(s.by && !people.includes(s.by) ? [s.by, ...people] : people).map((p) => <option key={p}>{p}</option>)}
-                        </select>
-                      </span>
-                    )}
                     <label onClick={(e) => e.stopPropagation()}>
                       <input type="checkbox" checked={s.closed} onChange={(e) => toggleClosed(k, e.target.checked)} /> Closed
                     </label>
@@ -644,6 +634,10 @@ export function TonightView() {
                       <div className="ho-lb">
                       {k !== "autumn" && renderStatus(k)}
                       <div className="ho-sub">
+                        <select id={`by-${k}`} className="ho-bysel" aria-label={`${name} reporter`} value={s.by} onChange={(e) => setEdit(k, { by: e.target.value })}>
+                          <option value="">Reporter</option>
+                          {(s.by && !people.includes(s.by) ? [s.by, ...people] : people).map((p) => <option key={p}>{p}</option>)}
+                        </select>
                         <button type="button" className="ho-btn ho-sm ho-primary" onClick={() => submitRoom(k)}>
                           {(r.submittedAt ? "Resubmit " : "Submit ") + name}
                         </button>

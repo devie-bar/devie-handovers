@@ -207,7 +207,9 @@ body {
 :where(.ho-app) .ho-room.ho-off .ho-rh h3{color:var(--dv-ink-soft)}
 :where(.ho-app) .ho-room .ho-by{display:flex;gap:8px;align-items:center}
 :where(.ho-app) .ho-room .ho-by select{flex:1;min-height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 10px}
-:where(.ho-app) .ho-room .ho-sub{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+:where(.ho-app) .ho-room .ho-sub{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+/* Reporter and Submit sit together at the right edge of the column; the submitted stamp goes to the left. */
+:where(.ho-app) .ho-room .ho-sub .ho-stamp{order:-1;margin-right:auto}
 :where(.ho-app) .ho-room.ho-sent .ho-sub .ho-btn.ho-primary{background:var(--dv-surface);border-color:var(--dv-line)}
 :where(.ho-app) .ho-room .ho-stamp{font-size:12px;color:var(--dv-good);font-weight:600}
 @media (min-width:840px){
@@ -384,15 +386,15 @@ body {
    aligned, small gap), Pull Sales on the far right. */
 :where(.ho-app) .ho-tophead{align-items:center;gap:12px 24px;padding-bottom:12px}
 :where(.ho-app) .ho-tophead h1{margin:0}
-:where(.ho-app) .ho-hl{display:flex;align-items:baseline;gap:4px 8px;flex-wrap:wrap;min-width:0}
-:where(.ho-app) .ho-hl .ho-ic{width:32px;padding:0;justify-content:center}
-@media (max-width:839.98px){:where(.ho-app) .ho-hl .ho-ic{width:44px}}
-:where(.ho-app) .ho-hl{align-items:center}
+/* Date navigator: previous, calendar, next, at the right edge on the heading's line; wraps under it only if it must. */
+:where(.ho-app) .ho-dnav{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-left:auto}
+:where(.ho-app) .ho-dnav .ho-ic{width:32px;padding:0;justify-content:center}
+@media (max-width:839.98px){:where(.ho-app) .ho-dnav .ho-ic{width:44px}}
 /* To do list: a ruled notepad, 28px lines, the bullet is the first character of each line. */
 :where(.ho-app) .ho-notepad{display:block;width:100%;min-height:196px;resize:vertical;background-color:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:8px 16px;font-size:15px;line-height:28px;background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 27px,var(--dv-line) 27px,var(--dv-line) 28px);background-size:100% 28px;background-repeat:repeat-y;background-attachment:local;background-position:0 8px}
 :where(.ho-app) .ho-quiet{background:none;border-color:transparent;color:var(--dv-ink-soft);padding:0 8px}
 
-:where(.ho-app) .ho-hl input[type=date]{min-height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 12px}
+:where(.ho-app) .ho-dnav input[type=date]{min-height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 12px}
 /* Handover author, in the sticky footer: same height as the Save and Publish buttons beside it. */
 :where(.ho-app) select.ho-author{height:38px;background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 10px;min-width:180px;font-size:13px}
 @media (max-width:839.98px){:where(.ho-app) select.ho-author{height:44px}}

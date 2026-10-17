@@ -491,8 +491,8 @@ export function TonightView() {
       <div className="ho-stack">
         <section className="ho-module ho-mstack" aria-labelledby="ho-night-h">
           <div className="ho-secthead ho-tophead">
-          <div className="ho-hl">
-            <h1 id="ho-night-h">{dateTitle(date)}</h1>
+          <h1 id="ho-night-h">{dateTitle(date)}</h1>
+          <div className="ho-dnav">
             <button type="button" className="ho-btn ho-sm ho-ic" aria-label="Previous day" title="Previous day" onClick={() => setDate(addDays(date, -1))}>
               <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>

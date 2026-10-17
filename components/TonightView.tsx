@@ -461,7 +461,7 @@ export function TonightView() {
   };
 
   const sq = draft.square;
-  const sqSub = sqBusy ? "Pulling…" : sqErr ?? (sq ? [`${sq.totals.orders} orders`, sq.window ? `${whenShort(sq.window.start)} to ${whenShort(sq.window.end)}` : "", `pulled ${timeHM(sq.pulledAt)}`].filter(Boolean).join(" · ") : "Not pulled yet");
+  const sqSub = sqBusy ? "" : sqErr ?? (sq ? [`${sq.totals.orders} orders`, sq.window ? `${whenShort(sq.window.start)} to ${whenShort(sq.window.end)}` : "", `pulled ${timeHM(sq.pulledAt)}`].filter(Boolean).join(" · ") : "");
 
   return (
     <section>
@@ -484,7 +484,6 @@ export function TonightView() {
               <button type="button" className="ho-btn ho-sm ho-quiet" onClick={() => setPickDate(true)}>Change date</button>
             )}
           </div>
-          <button type="button" className="ho-btn ho-sm ho-green ho-pull" disabled={sqBusy} onClick={pullSquare}>Pull Sales</button>
           </div>
           <div className="ho-night">
             <div><span className="ho-display ho-num">{total}</span><span className="ho-label">Total covers</span></div>
@@ -500,7 +499,15 @@ export function TonightView() {
           </div>
 
           <div className="ho-sq">
-            <span className="ho-caption" aria-live="polite">{sqSub}</span>
+            <div className="ho-sqrow">
+              <button
+                type="button" className={"ho-btn ho-sm ho-pull " + (sq ? "ho-used" : "ho-green")}
+                disabled={sqBusy} aria-busy={sqBusy} onClick={pullSquare}
+              >
+                {sqBusy ? "Pulling…" : sq ? "Pull Sales Again" : "Pull Sales"}
+              </button>
+              <span className="ho-caption" aria-live="polite">{sqSub}</span>
+            </div>
             <div className="ho-sq-out">
               {sq && (
                 <>

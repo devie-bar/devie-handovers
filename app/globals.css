@@ -243,6 +243,10 @@ body {
 :where(.ho-app) .ho-room.ho-off .ho-r2,:where(.ho-app) .ho-room.ho-off .ho-by,:where(.ho-app) .ho-room.ho-off .ho-sub{display:none}
 :where(.ho-app) .ho-mtop h2{font-size:26px}
 :where(.ho-app) .ho-sq{display:grid;gap:12px}
+:where(.ho-app) .ho-sqrow{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap}
+/* Already pulled for the night: still a live button (a re-pull overwrites), but neutral grey rather than the green call to act. */
+:where(.ho-app) .ho-btn.ho-used{background:var(--dv-line);border-color:var(--dv-line);color:var(--dv-ink-soft)}
+:where(.ho-app) .ho-btn.ho-used:hover:not([disabled]){background:var(--dv-skeleton-high);border-color:var(--dv-line);color:var(--dv-ink)}
 :where(.ho-app) .ho-sq-out{display:grid;gap:16px}
 :where(.ho-app) .ho-sq-out:empty{display:none}
 :where(.ho-app) .ho-sqt{width:100%;border-collapse:collapse;font-size:13.5px}

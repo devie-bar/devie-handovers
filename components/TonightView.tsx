@@ -8,6 +8,7 @@ import { ListNotepad } from "@/components/ListNotepad";
 import { groupNames } from "@/lib/menu";
 import { MaintenancePanel } from "@/components/MaintenancePanel";
 import { cap, eur, lines } from "@/lib/format";
+import { mergeDraftPayload } from "@/lib/draft-merge";
 import { serviceDateNow, timeHM, whenShort } from "@/lib/paris";
 import {
   CHANNEL_LABEL, LOCATIONS, ROOMS, ROOM_KEYS,
@@ -123,7 +124,8 @@ export function TonightView() {
     const ch = supabase
       .channel(`draft-${date}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "handover_drafts", filter: `service_date=eq.${date}` }, (p) => {
-        if (p.eventType !== "DELETE" && p.new) setDraft(normalise(p.new as DraftRow));
+        // The payload can leave out large unchanged columns, so merge it over what is shown rather than replacing it.
+        if (p.eventType !== "DELETE" && p.new) setDraft((d) => normalise(mergeDraftPayload(d, p.new as Partial<DraftRow>)));
       })
       .subscribe();
 

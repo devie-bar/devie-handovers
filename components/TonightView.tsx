@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useHandovers } from "@/components/HandoversProvider";
 import { MenuStatusList, type StatusGroup } from "@/components/MenuChips";
 import { Checklist } from "@/components/Checklist";
+import { ListNotepad } from "@/components/ListNotepad";
 import { groupNames } from "@/lib/menu";
 import { MaintenancePanel } from "@/components/MaintenancePanel";
 import { cap, eur, lines } from "@/lib/format";
@@ -64,6 +65,12 @@ function seedFromHandover(prev: HandoverRow): DraftRow {
     },
     square: prev.square, booked: prev.booked,
   };
+}
+
+// A yyyy-mm-dd date moved by n days.
+function addDays(d: string, n: number): string {
+  const [y, m, day] = d.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, day + n)).toISOString().slice(0, 10);
 }
 
 // "Saturday 11 October" for a yyyy-mm-dd service date.
@@ -421,6 +428,12 @@ export function TonightView() {
               </span>
             </button>
           </h3>
+          <span className="ho-hsel" onClick={(e) => e.stopPropagation()}>
+            <select id={`by-${k}`} aria-label={`${title} reporter`} value={u.by} onChange={(e) => setEdit(k, { by: e.target.value })}>
+              <option value="">Select reporter</option>
+              {(u.by && !people.includes(u.by) ? [u.by, ...people] : people).map((p) => <option key={p}>{p}</option>)}
+            </select>
+          </span>
           <svg className="ho-chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
             <path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -428,15 +441,6 @@ export function TonightView() {
         <div className="ho-rbody" id={`room-${k}`} role="region" aria-labelledby={`rh-${k}`}>
           <div className="ho-rin">
             <div className="ho-lt">
-            <div className="ho-r2">
-              <div className="ho-by">
-                <label className="ho-caption" htmlFor={`by-${k}`}>Reported by</label>
-                <select id={`by-${k}`} value={u.by} onChange={(e) => setEdit(k, { by: e.target.value })}>
-                  <option value="">Select who is reporting</option>
-                  {(u.by && !people.includes(u.by) ? [u.by, ...people] : people).map((p) => <option key={p}>{p}</option>)}
-                </select>
-              </div>
-            </div>
             <textarea
               placeholder={`Notes for ${title}`} aria-label={`${title} notes`} value={u.notes}
               onChange={(e) => setEdit(k, { notes: e.target.value })}
@@ -477,11 +481,21 @@ export function TonightView() {
           <div className="ho-secthead ho-tophead">
           <div className="ho-hl">
             <h1 id="ho-night-h">{dateTitle(date)}</h1>
-            {pickDate ? (
-              <input type="date" id="f-date" aria-label="Service date" required autoFocus value={date}
-                onChange={(e) => e.target.value && setDate(e.target.value)} onBlur={() => setPickDate(false)} />
-            ) : (
-              <button type="button" className="ho-btn ho-sm ho-quiet" onClick={() => setPickDate(true)}>Change date</button>
+            <button type="button" className="ho-btn ho-sm ho-ic" aria-label="Previous day" title="Previous day" onClick={() => setDate(addDays(date, -1))}>
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+            <button type="button" className="ho-btn ho-sm ho-ic" aria-label="Choose date" title="Choose date" onClick={() => setPickDate(true)}>
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="2" y="3.5" width="12" height="10.5" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M2 6.5h12M5.5 2v3M10.5 2v3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+            </button>
+            <button type="button" className="ho-btn ho-sm ho-ic" aria-label="Next day" title="Next day" onClick={() => setDate(addDays(date, 1))}>
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+            {pickDate && (
+              <input
+                type="date" id="f-date" aria-label="Service date" required autoFocus value={date}
+                ref={(el) => { try { el?.showPicker?.(); } catch { /* the field itself is still usable */ } }}
+                onChange={(e) => e.target.value && setDate(e.target.value)} onBlur={() => setPickDate(false)}
+              />
             )}
           </div>
           </div>
@@ -571,6 +585,14 @@ export function TonightView() {
                         <span className="ho-body-s ho-rsum">{summary}</span>
                       </button>
                     </h3>
+                    {!s.closed && (
+                      <span className="ho-hsel" onClick={(e) => e.stopPropagation()}>
+                        <select id={`by-${k}`} aria-label={`${name} reporter`} value={s.by} onChange={(e) => setEdit(k, { by: e.target.value })}>
+                          <option value="">Select reporter</option>
+                          {(s.by && !people.includes(s.by) ? [s.by, ...people] : people).map((p) => <option key={p}>{p}</option>)}
+                        </select>
+                      </span>
+                    )}
                     <label onClick={(e) => e.stopPropagation()}>
                       <input type="checkbox" checked={s.closed} onChange={(e) => toggleClosed(k, e.target.checked)} /> Closed
                     </label>
@@ -582,13 +604,6 @@ export function TonightView() {
                     <div className="ho-rin">
                       <div className="ho-lt">
                       <div className="ho-r2">
-                        <div className="ho-by">
-                          <label className="ho-caption" htmlFor={`by-${k}`}>Reported by</label>
-                          <select id={`by-${k}`} value={s.by} onChange={(e) => setEdit(k, { by: e.target.value })}>
-                            <option value="">Select who is reporting</option>
-                            {(s.by && !people.includes(s.by) ? [s.by, ...people] : people).map((p) => <option key={p}>{p}</option>)}
-                          </select>
-                        </div>
                         <div className="ho-cv">
                           <input
                             type="number" min={0} inputMode="numeric" placeholder="0" className="ho-num"
@@ -675,7 +690,7 @@ export function TonightView() {
             </div>
           </div>
           <div className="ho-f"><label htmlFor="f-todo">To do and MEP for tomorrow</label>
-            <textarea id="f-todo" value={shared.todo} onChange={(e) => setField("todo", e.target.value)} placeholder="One per line" /></div>
+            <ListNotepad id="f-todo" value={shared.todo} onChange={(v) => setField("todo", v)} placeholder="One per line" /></div>
           </section>
         </form>
 

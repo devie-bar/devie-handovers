@@ -180,7 +180,15 @@ body {
 :where(.ho-app) .ho-room{display:grid;gap:0;padding:8px 16px;background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-module)}
 :where(.ho-app) .ho-room .ho-rh{display:flex;align-items:center;justify-content:space-between;gap:8px}
 :where(.ho-app) .ho-room .ho-rh{cursor:pointer;min-height:var(--ctl)}
-:where(.ho-app) .ho-room .ho-rh h3{font-weight:400;flex:1;min-width:0}
+:where(.ho-app) .ho-room .ho-rh{flex-wrap:wrap}
+:where(.ho-app) .ho-room .ho-rh h3{font-weight:400;flex:0 1 auto;min-width:0}
+/* Reporter select in the header, straight after the title; the Closed box and chevron are pushed to the far right. */
+:where(.ho-app) .ho-room .ho-hsel{flex:0 1 220px;min-width:140px;display:flex}
+:where(.ho-app) .ho-room .ho-hsel select{width:100%;min-height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 10px}
+:where(.ho-app) .ho-room .ho-rh .ho-chev,:where(.ho-app) .ho-room .ho-rh label{margin-left:auto}
+:where(.ho-app) .ho-room .ho-rh label + .ho-chev{margin-left:0}
+/* Notes in a room body: a visible hairline box on white so it stands out from the module. */
+:where(.ho-app) .ho-room textarea{width:100%;min-height:72px;resize:vertical;background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:10px 16px}
 :where(.ho-app) .ho-room .ho-rtoggle{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;width:100%;min-height:var(--ctl);padding:4px 0;background:none;border:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
 :where(.ho-app) .ho-room .ho-rname{font:inherit;font-weight:400}
 /* Room title: PP Editorial Regular (400) at Display S 21px, a weight chosen on purpose (DESIGN.md 2.3) so the
@@ -378,6 +386,11 @@ body {
 :where(.ho-app) .ho-tophead{align-items:center;gap:12px 24px;padding-bottom:12px}
 :where(.ho-app) .ho-tophead h1{margin:0}
 :where(.ho-app) .ho-hl{display:flex;align-items:baseline;gap:4px 8px;flex-wrap:wrap;min-width:0}
+:where(.ho-app) .ho-hl .ho-ic{width:32px;padding:0;justify-content:center}
+@media (max-width:839.98px){:where(.ho-app) .ho-hl .ho-ic{width:44px}}
+:where(.ho-app) .ho-hl{align-items:center}
+/* To do list: a ruled notepad, 28px lines, the bullet is the first character of each line. */
+:where(.ho-app) .ho-notepad{display:block;width:100%;min-height:196px;resize:vertical;background-color:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:8px 16px;font-size:15px;line-height:28px;background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 27px,var(--dv-line) 27px,var(--dv-line) 28px);background-size:100% 28px;background-repeat:repeat-y;background-attachment:local;background-position:0 8px}
 :where(.ho-app) .ho-quiet{background:none;border-color:transparent;color:var(--dv-ink-soft);padding:0 8px}
 
 :where(.ho-app) .ho-hl input[type=date]{min-height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 12px}

@@ -527,15 +527,6 @@ export function TonightView() {
           </div>
 
           <div className="ho-sq">
-            <div className="ho-sqrow">
-              <button
-                type="button" className={"ho-btn ho-sm ho-pull " + (sq ? "ho-used" : "ho-green")}
-                disabled={sqBusy} aria-busy={sqBusy} onClick={pullSquare}
-              >
-                {sqBusy ? "Pulling…" : sq ? "Pull Sales Again" : "Pull Sales"}
-              </button>
-              <span className="ho-caption" aria-live="polite">{sqSub}</span>
-            </div>
             <div className="ho-sq-out">
               {sq && (
                 <>
@@ -564,6 +555,15 @@ export function TonightView() {
                   </table>
                 </>
               )}
+            </div>
+            <div className="ho-sqrow">
+              <span className="ho-caption" aria-live="polite">{sqSub}</span>
+              <button
+                type="button" className={"ho-btn ho-sm ho-pull " + (sq ? "ho-used" : "ho-green")}
+                disabled={sqBusy} aria-busy={sqBusy} onClick={pullSquare}
+              >
+                {sqBusy ? "Pulling…" : sq ? "Pull Sales Again" : "Pull Sales"}
+              </button>
             </div>
           </div>
         </section>
@@ -718,16 +718,13 @@ export function TonightView() {
 
         <section className="ho-module ho-commitmod" aria-label="Save and publish">
           <div className="ho-commit">
-            <div className="ho-commit-msg">
-              <span className="ho-caption">
-                {published && draft.published_at ? `Published by ${draft.published_by} at ${timeHM(draft.published_at)}` : "Draft"}
-              </span>
-              <span className="ho-toast ho-body-s" aria-live="polite">{toastText}</span>
-            </div>
             <select id="author" className="ho-author" aria-label="Handover author" value={author} onChange={(e) => setAuthor(e.target.value)}>
               <option value="">Select author</option>
               {(author && !people.includes(author) ? [author, ...people] : people).map((p) => <option key={p}>{p}</option>)}
             </select>
+            <div className="ho-commit-msg">
+              <span className="ho-toast ho-body-s" aria-live="polite">{toastText}</span>
+            </div>
             <div className="ho-commit-btns">
               <button type="button" className="ho-btn ho-act" onClick={saveDraft}>Save draft</button>
               <button type="submit" form="handover-form" className="ho-btn ho-act ho-primary" disabled={publishing}>{testMode ? "Publish (test to me)" : published ? "Publish again" : "Publish handover"}</button>

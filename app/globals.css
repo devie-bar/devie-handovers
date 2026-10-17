@@ -207,9 +207,11 @@ body {
 :where(.ho-app) .ho-room.ho-off .ho-rh h3{color:var(--dv-ink-soft)}
 :where(.ho-app) .ho-room .ho-by{display:flex;gap:8px;align-items:center}
 :where(.ho-app) .ho-room .ho-by select{flex:1;min-height:var(--ctl);background:var(--dv-surface);border:1px solid var(--dv-line);border-radius:var(--dv-radius-control);padding:0 10px}
-:where(.ho-app) .ho-room .ho-sub{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
-/* Reporter and Submit sit together at the right edge of the column; the submitted stamp goes to the left. */
-:where(.ho-app) .ho-room .ho-sub .ho-stamp{order:-1;margin-right:auto}
+:where(.ho-app) .ho-room .ho-sub{display:flex;gap:8px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
+/* Reporter at the left, Submit at the right of the same row; the submitted stamp gets its own line above. */
+:where(.ho-app) .ho-room .ho-sub .ho-stamp{order:-1;flex-basis:100%}
+:where(.ho-app) .ho-room .ho-sub .ho-stamp:empty{display:none}
+:where(.ho-app) .ho-room .ho-sub .ho-primary{margin-left:auto}
 :where(.ho-app) .ho-room.ho-sent .ho-sub .ho-btn.ho-primary{background:var(--dv-surface);border-color:var(--dv-line)}
 :where(.ho-app) .ho-room .ho-stamp{font-size:12px;color:var(--dv-good);font-weight:600}
 @media (min-width:840px){
@@ -252,7 +254,9 @@ body {
 :where(.ho-app) .ho-room.ho-off .ho-r2,:where(.ho-app) .ho-room.ho-off .ho-by,:where(.ho-app) .ho-room.ho-off .ho-sub{display:none}
 :where(.ho-app) .ho-mtop h2{font-size:26px}
 :where(.ho-app) .ho-sq{display:grid;gap:12px}
-:where(.ho-app) .ho-sqrow{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap}
+:where(.ho-app) .ho-sqrow{display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap}
+/* Pull row sits at the bottom of the module: status on the left, the button at the right edge. */
+:where(.ho-app) .ho-sqrow .ho-pull{margin-left:auto}
 /* Already pulled for the night: still a live button (a re-pull overwrites), but neutral grey rather than the green call to act. */
 :where(.ho-app) .ho-btn.ho-used{background:var(--dv-line);border-color:var(--dv-line);color:var(--dv-ink-soft)}
 :where(.ho-app) .ho-btn.ho-used:hover:not([disabled]){background:var(--dv-skeleton-high);border-color:var(--dv-line);color:var(--dv-ink)}
@@ -295,7 +299,7 @@ body {
 /* Commit row. Size and weight match the Library's .dv-new primary action (devie-archive Archive.jsx):
    38px high, 0 18px padding, Epilogue 13px, weight 700, .04em tracking, copper fill. DESIGN.md 2.2:
    ink text on copper. Weight 700 is chosen on purpose (DESIGN.md 2.3) so the two actions read as the page's commit. */
-:where(.ho-app) .ho-commit{display:flex;align-items:center;justify-content:flex-end;gap:12px 16px;flex-wrap:wrap}
+:where(.ho-app) .ho-commit{display:flex;align-items:flex-end;justify-content:flex-end;gap:12px 16px;flex-wrap:wrap}
 :where(.ho-app) .ho-commit-btns{display:flex;gap:16px;align-items:center}
 :where(.ho-app) .ho-btn.ho-act{min-height:38px;height:38px;padding:0 18px;font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--dv-ink)}
 :where(.ho-app) .ho-btn.ho-act.ho-primary:hover{background:var(--dv-copper-deep);border-color:var(--dv-copper-deep);color:#fff}
@@ -384,7 +388,8 @@ body {
 
 /* The top of the Tonight module (its hairline header): the date heading with Change date inline beside it on the left (baseline
    aligned, small gap), Pull Sales on the far right. */
-:where(.ho-app) .ho-tophead{align-items:center;gap:12px 24px;padding-bottom:12px}
+/* Doubled class: the generic .ho-secthead rule (baseline) comes later at equal weight and would win. */
+:where(.ho-app) .ho-secthead.ho-tophead{align-items:center;gap:12px 24px;padding-bottom:12px}
 :where(.ho-app) .ho-tophead h1{margin:0}
 /* Date navigator: previous, calendar, next, at the right edge on the heading's line; wraps under it only if it must. */
 :where(.ho-app) .ho-dnav{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-left:auto}
